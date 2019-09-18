@@ -1884,6 +1884,7 @@ SUBROUTINE med_hist_out ( grid , stream, config_flags )
    USE module_dm, ONLY : intercomm_active
 !   USE module_bc_time_utilities
    USE module_utility
+   USE module_xios  , ONLY : xios_on
 
    IMPLICIT NONE
   ! Arguments
@@ -1898,7 +1899,7 @@ SUBROUTINE med_hist_out ( grid , stream, config_flags )
 
    IF ( .NOT. grid%active_this_task ) RETURN
 
-   IF ( wrf_dm_on_monitor() ) THEN
+   IF ( wrf_dm_on_monitor() .AND. .NOT. xios_on ) THEN
      CALL start_timing
    END IF
 
@@ -1951,7 +1952,7 @@ write(0,*)__FILE__,__LINE__,' grid%id ',grid%id,' grid%oid ',grid%oid
 #include "med_hist_out_closes.inc"
 
    END SELECT
-   IF ( wrf_dm_on_monitor() ) THEN
+   IF ( wrf_dm_on_monitor() .AND. .NOT. xios_on ) THEN
      WRITE ( message , FMT = '("Writing ",A," for domain ",I8)' )TRIM(fname),grid%id
      CALL end_timing ( TRIM(message) )
    END IF

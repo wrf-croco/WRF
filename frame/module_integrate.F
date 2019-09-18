@@ -19,6 +19,7 @@ RECURSIVE SUBROUTINE integrate ( grid )
 !   USE module_linked_list2, only : linkedlist_initialize
 #endif
    USE module_cpl, ONLY : coupler_on, cpl_snd, cpl_defdomain
+   USE module_xios, ONLY : xios_on, xios_initdomain, xios_finalizedomain
 #ifdef DM_PARALLEL
 ! better if this did not need to be used here. Problem is that the definition of 
 ! domain_active_this_task comes from module_dm, and the routine it's being passed to (alloc_and_configure_domain)
@@ -353,7 +354,8 @@ IF ( grid%active_this_task ) THEN
                IF ( grid%dfi_stage == DFI_STARTFWD ) THEN
                   CALL wrf_dfi_startfwd_init(new_nest)
                ENDIF
-               IF (coupler_on) CALL cpl_defdomain( new_nest ) 
+               IF (coupler_on) CALL cpl_defdomain( new_nest )
+               IF (   xios_on) CALL xios_initdomain( new_nest, config_flags ) 
 ENDIF ! active_this_task
             END DO
             IF ( a_nest_was_opened ) THEN
@@ -363,6 +365,7 @@ ENDIF ! active_this_task
 IF ( grid%active_this_task ) THEN
             ! Accumulation calculation for DFI
               CALL dfi_accumulate ( grid )
+              IF (xios_on) CALL WRFU_AlarmRingerOn( grid%alarms( HISTORY_ALARM ) )
 ENDIF ! active_this_task
 
 #if ( WRFPLUS == 1 )
@@ -509,8 +512,10 @@ ENDIF ! active_this_task
 
          ! Avoid double writes on nests if this is not really the last time;
          ! Do check for write if the parent domain is ending.
+         IF (xios_on) CALL WRFU_AlarmRingerOn( grid%alarms( HISTORY_ALARM ) )
          IF ( grid%id .EQ. 1 ) THEN               ! head_grid
             IF ( grid%active_this_task ) CALL med_last_solve_io ( grid , config_flags )
+            IF (xios_on) CALL xios_finalizedomain( grid%id )
          ELSE
 ! zip up the tree and see if any ancestor is at its stop time
             should_do_last_io = domain_clockisstoptime( head_grid )
@@ -525,6 +530,7 @@ ENDIF ! active_this_task
                grid_ptr => grid 
                CALL med_nest_feedback ( grid_ptr%parents(1)%ptr, grid , config_flags )
                IF ( grid%active_this_task ) CALL med_last_solve_io ( grid , config_flags )
+               IF (xios_on) CALL xios_finalizedomain( grid%id ) 
             ENDIF
          ENDIF
       ENDIF

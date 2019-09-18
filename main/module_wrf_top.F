@@ -50,6 +50,7 @@ MODULE module_wrf_top
 #endif
 
    USE module_cpl, ONLY : coupler_on, cpl_finalize, cpl_defdomain
+   USE module_xios, ONLY : xios_on, xios_finalizemodel, xios_initdomain
 
    IMPLICIT NONE
 
@@ -443,6 +444,7 @@ CONTAINS
 #endif
 
    IF (coupler_on) CALL cpl_defdomain( head_grid ) 
+   IF (   xios_on) CALL xios_initdomain( head_grid, config_flags )
   ENDIF  ! domain_active_this_task
 
    END SUBROUTINE wrf_init
@@ -2117,8 +2119,9 @@ ENDIF
    ! for DM parallel runs).  
    IF ( .NOT. PRESENT( no_shutdown ) ) THEN
      ! Finalize time manager
-      IF (coupler_on) THEN 
-         CALL cpl_finalize() 
+      IF (xios_on) THEN
+         CALL xios_finalizemodel()
+         IF (coupler_on) CALL cpl_finalize()
       ELSE
          CALL WRFU_Finalize
          CALL wrf_shutdown
