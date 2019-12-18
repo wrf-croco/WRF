@@ -1075,7 +1075,7 @@ state    real    dl_u_bep      ikj     misc        1         Z      -        "dl
 state    real    sf_bep        ikj     misc        1         Z      -        "sf_bep"                "surface grid"              "-"
 state    real    vl_bep        ikj     misc        1         Z      -        "vl_bep"                "volume grid"               "-"
 state    real   tke_pbl        ikj     misc        1         Z      rh       "tke_pbl"              "TKE from PBL"      "m2 s-2"
-state    real   el_pbl         ikj     misc        1         Z      h        "el_pbl"               "Length scale from PBL"      "m"
+state    real   el_pbl         ikj     misc        1         Z      rh       "el_pbl"               "Length scale from PBL"      "m"
 # Diagnostic BOULAC PBL variables
 state    real   wu_tur         ikj     misc        1         -      r        "wu_tur"               "Turbulent flux of momentum(x)"      "m2 s-2"
 state    real   wv_tur         ikj     misc        1         -      r        "wv_tur"               "Turbulent flux of momentum(y)"      "m2 s-2"
@@ -1533,7 +1533,7 @@ state    real  RTHRATENLW      ikj      misc        1         -      r        "R
 state    real  RTHRATENSW      ikj      misc        1         -      r        "RTHRATSW"              "UNCOUPLED THETA TENDENCY DUE TO SHORT WAVE RADIATION"   "K s-1"
 state    real  CLDFRA          ikj      misc        1         -      rh       "CLDFRA"                "CLOUD FRACTION"                                       ""
 state    real  CLDFRA_OLD      ikj      misc        1         -      r        "CLDFRA_OLD"            "previous time level cldfra"                           ""
-state    real  CLDFRA_BL       ikj      misc        1         -      -        "CLDFRA_BL"             "CLOUD FRACTION pbl"                                   ""
+state    real  CLDFRA_BL       ikj      misc        1         -      r        "CLDFRA_BL"             "CLOUD FRACTION pbl"                                   ""
 state    real  CLDT             ij      misc        1         -      -        "CFRACT"                "TOTAL CLOUD FRACTION"                                 ""
 #state    real  CLDL             ij      misc        1         -      -        "CFRACL"                "LOW CLOUD FRACTION (ETA GREATER THAN 0.69)"           ""
 #state    real  LWP              ij      misc        1         -      -        "LWP"                   "LIQUID CLOUD WATER PATH"                              "kg m-2"
