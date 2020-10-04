@@ -33,7 +33,7 @@ CONTAINS
      &          ,t_phy,u10,udrunoff,ust,uz0                           &
      &          ,u_frame,u_phy,v10,vegfra,u10e,v10e,uoce,voce         &
      &          ,vz0,v_frame,v_phy,warm_rain,wspd,xice,xland,z,znt    &
-     &          ,max_edom,cplmask                                     &
+     &          ,max_edom,cplmask,cosa,sina                           &
 #if (HWRF==1)
      &          ,mznt                                                 &
 #endif
@@ -138,7 +138,7 @@ CONTAINS
      &           ,onset_swi,offset_flag,offset_counter,offset_fdd,offset_swi &
      &           ,dayl,annavg_t2m,tempavg_t2m,tempsum_potential_gpp          &
      &           ,annsum_potential_gpp,tempmax_retransn,annmax_retransn      &
-     &           ,prev_leafc_to_litter,prev_frootc_to_litter,tempsum_npp     &
+     &           ,prev_leafc_to_litter,prev_frootc_t2o_litter,tempsum_npp     &
      &           ,annsum_npp,leafc,leafc_storage,leafc_xfer,frootc           &
      &           ,frootc_storage,frootc_xfer,livestemc,livestemc_storage     &
      &           ,livestemc_xfer,deadstemc,deadstemc_storage,deadstemc_xfer  &
@@ -382,7 +382,7 @@ CONTAINS
    USE module_sf_sstskin
    USE module_sf_tmnupdate
    USE module_sf_lake
-   USE module_cpl, ONLY : coupler_on, cpl_rcv
+   USE module_cpl, ONLY : coupler_on, cpl_rcv_sfcdrv
 !
 !  This driver calls subroutines for the surface parameterizations.
 !
@@ -675,6 +675,7 @@ CONTAINS
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT)::   XLAND
    INTEGER,                                          INTENT(IN   ) ::   MAX_EDOM
    REAL, DIMENSION( ims:ime , 1:max_edom, jms:jme ), INTENT(IN   ), OPTIONAL ::   CPLMASK
+   REAL, DIMENSION( ims:ime , jms:jme ), INTENT(IN   )::   COSA, SINA
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT)::   XICEM
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT)::   MAVAIL
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT)::   SNOALB
@@ -1434,25 +1435,11 @@ CONTAINS
   endif
 
   IF ( coupler_on .and. present(cplmask) .and. present(sst_input) ) THEN
-     
-     CALL cpl_rcv( id, 'SST',            &
+     CALL cpl_rcv_sfcdrv( id, max_edom, cplmask, cosa, sina,    &
+        &              SST_INPUT, SST, UOCE, VOCE,   &
         &              ids, ide, jds, jde, kds, kde, &
         &              ims, ime, jms, jme, kms, kme, &
-        &              ips, ipe, jps, jpe, kps, kpe, &
-        &              max_edom, cplmask, SST, SST_INPUT )
-     
-     CALL cpl_rcv( id, 'UOCE',            &
-        &              ids, ide, jds, jde, kds, kde, &
-        &              ims, ime, jms, jme, kms, kme, &
-        &              ips, ipe, jps, jpe, kps, kpe, &
-        &              max_edom, cplmask, UOCE )
-     
-     CALL cpl_rcv( id, 'VOCE',            &
-        &              ids, ide, jds, jde, kds, kde, &
-        &              ims, ime, jms, jme, kms, kme, &
-        &              ips, ipe, jps, jpe, kps, kpe, &
-        &              max_edom, cplmask, VOCE )
-     
+        &              ips, ipe, jps, jpe, kps, kpe  )
   END IF
 
 #if (EM_CORE==1)
