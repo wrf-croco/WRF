@@ -763,6 +763,34 @@ CONTAINS
                     ,TSKINTEMPCLMAX=grid%tskintempmax                      &
                     ,SKINTEMPCLMEAN=grid%skintempmean                      &
                     ,SKINTEMPCLSTD=grid%skintempstd                        &
+                    ,u_phy_01=grid%u_phy(:,kms,:)                          &
+                    ,v_phy_01=grid%v_phy(:,kms,:)                          &
+                    ,uoce=grid%uoce,voce=grid%voce                         &
+                    ,rho_01=grid%rho(:,kms,:),ust=grid%ust                 &
+                    ,u_01=grid%u_01,v_01=grid%v_01,wspd_01=grid%wspd_01    &
+                    ,twspd_01clmax=grid%twspd_01max                        &
+                    ,u_01clmax=grid%u_01max,v_01clmax=grid%v_01max         &
+                    ,wspd_01clmax=grid%wspd_01max                          &
+                    ,u_01clmean=grid%u_01mean,v_01clmean=grid%v_01mean     &
+                    ,wspd_01clmean=grid%wspd_01mean                        &
+                    ,u_01clstd=grid%u_01std,v_01clstd=grid%v_01std         &
+                    ,wspd_01clstd=grid%wspd_01std                          &
+                    ,utau=grid%utau,vtau=grid%vtau,taum=grid%taum          &
+                    ,ttaumclmax=grid%ttaummax                              &
+                    ,utauclmax=grid%utaumax,vtauclmax=grid%vtaumax         &
+                    ,taumclmax=grid%taummax                                &
+                    ,utauclmean=grid%utaumean,vtauclmean=grid%vtaumean     &
+                    ,taumclmean=grid%taummean                              &
+                    ,utauclstd=grid%utaustd,vtauclstd=grid%vtaustd         &
+                    ,taumclstd=grid%taumstd                                &
+                    ,u_uo=grid%u_uo,v_vo=grid%v_vo,wspd_uo=grid%wspd_uo    &
+                    ,twspd_uoclmax=grid%twspd_uomax                        &
+                    ,u_uoclmax=grid%u_uomax,v_voclmax=grid%v_vomax         &
+                    ,wspd_uoclmax=grid%wspd_uomax                          &
+                    ,u_uoclmean=grid%u_uomean,v_voclmean=grid%v_vomean     &
+                    ,wspd_uoclmean=grid%wspd_uomean                        &
+                    ,u_uoclstd=grid%u_uostd,v_voclstd=grid%v_vostd         &
+                    ,wspd_uoclstd=grid%wspd_uostd                          &
                     ,RAINCV=grid%raincv    ,RAINNCV=grid%rainncv           &
                     ,DT=grid%dt                                            &
                     ,XTIME=grid%xtime,CURR_SECS2=curr_secs2                &
