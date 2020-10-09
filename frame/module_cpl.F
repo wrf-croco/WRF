@@ -319,7 +319,7 @@ CONTAINS
       INTEGER                           :: max_edom
       REAL                              :: zu_uo, zv_vo, zspd, ztmp
       REAL, DIMENSION(:,:), ALLOCATABLE :: cplsnd
-      REAL, DIMENSION(:,:), ALLOCATABLE :: taut, taui, tauj
+      REAL, DIMENSION(:,:), ALLOCATABLE :: u_uo, v_vo, taut, taui, tauj
       LOGICAL,DIMENSION(:), ALLOCATABLE :: lltosend
       !!--------------------------------------------------------------------
 #if (EM_CORE == 1)
@@ -459,10 +459,11 @@ CONTAINS
       lltosend(:) = cpl_tosend( grid%id, cpl_get_fldid( 'WND_U_01' ), max_edom )   &  ! zonal wind speed
          &     .OR. cpl_tosend( grid%id, cpl_get_fldid( 'WND_E_01'   ), max_edom )    ! or eastward
       IF ( COUNT(lltosend) > 0 ) THEN
+         ALLOCATE( u_uo(ips:ipe,jps:jpe), v_vo(ips:ipe,jps:jpe) )
          DO j = jps, jpe
             DO i = ips, ipe
-               zu_uo = grid%u_phy(i,kps,j) - grid%uoce(i,j)
-               zv_vo = grid%v_phy(i,kps,j) - grid%voce(i,j)
+               u_uo(i,j) = grid%u_phy(i,kps,j) - grid%uoce(i,j)
+               v_vo(i,j) = grid%v_phy(i,kps,j) - grid%voce(i,j)
             END DO
          END DO
       END IF
@@ -506,8 +507,8 @@ CONTAINS
       ifldidv     = cpl_get_fldid( 'WND_V_01' )
       lltosend(:) = cpl_tosend( grid%id, ifldidu, max_edom ) .AND. cpl_tosend( grid%id, ifldidv, max_edom )
       IF ( COUNT(lltosend) > 0 ) THEN
-         CALL cpl_sndfield( grid%id, lltosend, ifldidu, zu_uo )
-         CALL cpl_sndfield( grid%id, lltosend, ifldidv, zv_vo )
+         CALL cpl_sndfield( grid%id, lltosend, ifldidu, u_uo )
+         CALL cpl_sndfield( grid%id, lltosend, ifldidv, v_vo )
       END IF
 
       ! WND_E_01 / WND_N_01 : Eastward / Northward 1st level wind speed (m s-1)
@@ -516,16 +517,17 @@ CONTAINS
       ifldidv     = cpl_get_fldid( 'WND_N_01' )
       lltosend(:) = cpl_tosend( grid%id, ifldidu, max_edom ) .AND. cpl_tosend( grid%id, ifldidv, max_edom )
       IF ( COUNT(lltosend) > 0 ) THEN
-         cplsnd(ips:ipe,jps:jpe) = grid%cosa(ips:ipe,jps:jpe) * zu_uo(ips:ipe,jps:jpe)   &
-            &                    - grid%sina(ips:ipe,jps:jpe) * zv_vo(ips:ipe,jps:jpe)
+         cplsnd(ips:ipe,jps:jpe) = grid%cosa(ips:ipe,jps:jpe) * u_uo(ips:ipe,jps:jpe)   &
+            &                    - grid%sina(ips:ipe,jps:jpe) * v_vo(ips:ipe,jps:jpe)
          CALL cpl_sndfield( grid%id, lltosend, ifldidu, cplsnd )
-         cplsnd(ips:ipe,jps:jpe) = grid%cosa(ips:ipe,jps:jpe) * zv_vo(ips:ipe,jps:jpe)   &
-            &                    + grid%sina(ips:ipe,jps:jpe) * zu_uo(ips:ipe,jps:jpe)
+         cplsnd(ips:ipe,jps:jpe) = grid%cosa(ips:ipe,jps:jpe) * v_vo(ips:ipe,jps:jpe)   &
+            &                    + grid%sina(ips:ipe,jps:jpe) * u_uo(ips:ipe,jps:jpe)
          CALL cpl_sndfield( grid%id, lltosend, ifldidv, cplsnd )
       END IF
       
       DEALLOCATE( cplsnd, lltosend )
       IF( ALLOCATED(taut) )   DEALLOCATE(taut, taui,tauj)
+      IF( ALLOCATED(u_uo) )   DEALLOCATE(u_uo, v_vo)
 #endif       
    END SUBROUTINE cpl_snd
 
@@ -557,7 +559,7 @@ CONTAINS
       &                ids, ide, jds, jde, kds, kde, &
       &                ims, ime, jms, jme, kms, kme, &
       &                ips, ipe, jps, jpe, kps, kpe, &
-      &                max_edom, pcplmask, pdatacpl, pdataobs )
+      &                max_edom, pcplmask, pdatacpl, pdataobs, cst )
       !!-------------------------------------------------------------------
       !!             ***  SUBROUTINE cpl_rcv  ***
       !!
@@ -572,6 +574,7 @@ CONTAINS
       REAL, DIMENSION( ims:ime, 1:max_edom, jms:jme ),           INTENT(IN   ) :: pcplmask    ! coupling mask
       REAL, DIMENSION( ims:ime,             jms:jme ),           INTENT(  OUT) :: pdatacpl    ! coupling data
       REAL, DIMENSION( ims:ime,             jms:jme ), OPTIONAL, INTENT(IN   ) :: pdataobs    ! observed data to be merged
+      REAL, DIMENSION( ims:ime,             jms:jme ), OPTIONAL, INTENT(IN   ) :: cst         ! constant value to be merged
       !
       INTEGER :: jext                                ! external domain index
       INTEGER :: ifldid                              ! field index
@@ -595,6 +598,8 @@ CONTAINS
             IF( lltorcv(jext) )   obsmsk(ips:ipe,jps:jpe) = obsmsk(ips:ipe,jps:jpe) - pcplmask(ips:ipe,jext,jps:jpe)
          END DO
          pdatacpl(ips:ipe,jps:jpe) = pdataobs(ips:ipe,jps:jpe) * obsmsk(ips:ipe,jps:jpe)
+      ELSE IF( PRESENT(cst) ) THEN
+         pdatacpl(ips:ipe,jps:jpe) = cst   ! default value: consider that pdataobs = cst
       ELSE 
          pdatacpl(ips:ipe,jps:jpe) = 0.0   ! default value: consider that pdataobs = 0.
       END IF
@@ -738,7 +743,7 @@ CONTAINS
          &              ids, ide, jds, jde, kds, kde, &
          &              ims, ime, jms, jme, kms, kme, &
          &              ips, ipe, jps, jpe, kps, kpe, &
-         &              max_edom, CPLMASK, SST, SST_INPUT )
+         &              max_edom, CPLMASK, SST, pdataobs=SST_INPUT )
       
       CALL cpl_rcv_vector( kdomwrf, 'UOCE', 'VOCE', 'EOCE', 'NOCE',   &
          &              ids, ide, jds, jde, kds, kde,                 &
@@ -750,7 +755,7 @@ CONTAINS
          &              ids, ide, jds, jde, kds, kde, &
          &              ims, ime, jms, jme, kms, kme, &
          &              ips, ipe, jps, jpe, kps, kpe, &
-         &              max_edom, CPLMASK, CHA_COEF )
+         &              max_edom, CPLMASK, CHA_COEF, cst=0.0185 )
       
    END SUBROUTINE cpl_rcv_sfcdrv
 
