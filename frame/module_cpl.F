@@ -574,7 +574,7 @@ CONTAINS
       REAL, DIMENSION( ims:ime, 1:max_edom, jms:jme ),           INTENT(IN   ) :: pcplmask    ! coupling mask
       REAL, DIMENSION( ims:ime,             jms:jme ),           INTENT(  OUT) :: pdatacpl    ! coupling data
       REAL, DIMENSION( ims:ime,             jms:jme ), OPTIONAL, INTENT(IN   ) :: pdataobs    ! observed data to be merged
-      REAL, DIMENSION( ims:ime,             jms:jme ), OPTIONAL, INTENT(IN   ) :: cst         ! constant value to be merged
+      REAL,                                            OPTIONAL, INTENT(IN   ) :: cst         ! constant value to be merged
       !
       INTEGER :: jext                                ! external domain index
       INTEGER :: ifldid                              ! field index
