@@ -167,6 +167,11 @@ CONTAINS
       IF( ierror /= OASIS_Ok ) CALL cpl_oasis_abort( 'cpl_oasis_define', 'Failure in oasis_def_partition')
 
       ! -----------------------------------------------------------------
+      ! ... Create grids, masks, and areas files for OASIS
+      ! -----------------------------------------------------------------
+      CALL cpl_oasis_grid( pgrid, id_part )
+
+      ! -----------------------------------------------------------------
       ! ... Define the variables that can be send/received by WRF
       ! -----------------------------------------------------------------
       IF( llcompute_core ) THEN   ;   idwrf1 = pgrid%id   ;   idwrf2 = pgrid%id      ! coupling field related to this nest
@@ -443,7 +448,122 @@ CONTAINS
       CALL oasis_abort( ncomp_id, cdroutine, cdtxt )
       
    END SUBROUTINE cpl_oasis_abort
-   
+
+
+   SUBROUTINE cpl_oasis_grid( grid, id_part )
+      !!-------------------------------------------------------------------
+      !!             ***  SUBROUTINE cpl_oasis_grid  ***
+      !!
+      !! ** Purpose : Write masks, areas and grid.nc OASIS files
+      !!    !  Need to use oasis3_mct_v3 !
+      !!--------------------------------------------------------------------
+      INTEGER, INTENT(IN) :: id_part                 ! partition id in oasis
+      TYPE(domain), INTENT(IN), POINTER ::   grid
+      !!
+      INTEGER :: ips,ipe,jps,jpe,kps,kpe             ! domain dimension on 1 processor
+      INTEGER :: ims,ime,jms,jme,kms,kme             ! memory domain dimension on 1 processor
+      INTEGER :: ids,ide,jds,jde,kds,kde             ! domain dimension
+      INTEGER :: iparal(5)                           ! OASIS box partition
+      REAL, ALLOCATABLE, DIMENSION(:,:,:) ::  clont  ! corner longitude
+      REAL, ALLOCATABLE, DIMENSION(:,:,:) ::  clatt  ! corner latitude
+      REAL, ALLOCATABLE, DIMENSION(:,:) ::  areat    ! cell area
+      INTEGER, ALLOCATABLE, DIMENSION(:,:) :: rmask  ! mask
+      INTEGER :: j,i                                 ! local loop indices
+      INTEGER :: error_flg
+      !!--------------------------------------------------------------------
+
+      CALL wrf_message('cpl_oasis_grid : Writing OASIS files')
+
+      CALL get_ijk_from_grid( grid, ids, ide, jds, jde, kds, kde, &
+         &                          ims, ime, jms, jme, kms, kme, &
+         &                          ips, ipe, jps, jpe, kps, kpe  )
+
+      !----------------------------
+      !-----  Allocate arrays
+      !----------------------------
+      ALLOCATE( clont(ips:ipe,jps:jpe,4) )
+      ALLOCATE( clatt(ips:ipe,jps:jpe,4) )
+      ALLOCATE( areat(ips:ipe,jps:jpe) )
+      ALLOCATE( rmask(ips:ipe,jps:jpe) )
+
+      !------------------------------------------------------------------
+      ! Start grid writing
+      !------------------------------------------------------------------
+      CALL oasis_start_grids_writing(error_flg)
+
+      !------------------------------------------------------------------
+      ! Model grid longitudes and latitudes
+      !------------------------------------------------------------------
+      !-- t-grid --
+      CALL oasis_write_grid('atmt',ide,jde,       &
+         &           grid%XLONG(ips:ipe,jps:jpe), &
+         &           grid%XLAT(ips:ipe,jps:jpe),  &
+         &           id_part)
+
+      !------------------------------------------------------------------
+      ! Model grid cell corner longitudes and latitudes
+      !------------------------------------------------------------------
+      DO j=jps, jpe
+        DO i=ips, ipe
+
+          clont(i,j,1)=0.5*(grid%XLONG_U(i+1,j)+grid%XLONG_U(i+1,j+1))
+          clont(i,j,2)=0.5*(grid%XLONG_U(i,j)+grid%XLONG_U(i,j+1))
+          clont(i,j,3)=0.5*(grid%XLONG_U(i,j-1)+grid%XLONG_U(i,j))
+          clont(i,j,4)=0.5*(grid%XLONG_U(i+1,j-1)+grid%XLONG_U(i+1,j))
+          clatt(i,j,1)=0.5*(grid%XLAT_V(i+1,j)+grid%XLAT_V(i+1,j+1))
+          clatt(i,j,2)=0.5*(grid%XLAT_V(i,j)+grid%XLAT_V(i,j+1))
+          clatt(i,j,3)=0.5*(grid%XLAT_V(i,j-1)+grid%XLAT_V(i,j))
+          clatt(i,j,4)=0.5*(grid%XLAT_V(i+1,j-1)+grid%XLAT_V(i+1,j))
+
+        ENDDO
+      ENDDO
+
+      CALL oasis_write_corner('atmt', ide, jde, 4, &
+         &             clont(ips:ipe,jps:jpe,:),   &
+         &             clatt(ips:ipe,jps:jpe,:),   &
+         &             id_part)
+
+      !------------------------------------------------------------------
+      ! Model grid cell area
+      !------------------------------------------------------------------
+      DO j=jps, jpe
+        DO i=ips, ipe
+          areat(i,j)=grid%dx*grid%dy
+        ENDDO
+      ENDDO
+
+      CALL oasis_write_area('atmt', ide, jde,              &
+         &                         areat(ips:ipe,jps:jpe), &
+         &                         id_part)
+
+      !------------------------------------------------------------------
+      ! Model grid mask : 0=sea / 1=land
+      !------------------------------------------------------------------
+      rmask=0
+      DO j=jps, jpe
+        DO i=ips, ipe
+          IF (grid%LANDMASK(i,j)==1) rmask(i,j)=1
+        ENDDO
+      ENDDO
+
+      CALL oasis_write_mask('atmt', ide, jde,          &
+         &                     rmask(ips:ipe,jps:jpe), &
+         &                     id_part)
+
+      !------------------------------------------------------------------
+      ! Terminate grid writing
+      !------------------------------------------------------------------
+      CALL oasis_terminate_grids_writing()
+      DEALLOCATE( clont )
+      DEALLOCATE( clatt )
+      DEALLOCATE( areat )
+      DEALLOCATE( rmask )
+
+      CALL wrf_message('cpl_oasis_grid : End Writing OASIS files')
+
+   END SUBROUTINE cpl_oasis_grid
+
+
 #else
    !!----------------------------------------------------------------------
    !!   Dummy modules just for compilation...

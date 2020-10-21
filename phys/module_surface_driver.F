@@ -33,7 +33,7 @@ CONTAINS
      &          ,t_phy,u10,udrunoff,ust,uz0                           &
      &          ,u_frame,u_phy,v10,vegfra,u10e,v10e,uoce,voce         &
      &          ,vz0,v_frame,v_phy,warm_rain,wspd,xice,xland,z,znt    &
-     &          ,max_edom,cplmask                                     &
+     &          ,max_edom,cplmask,cosa,sina,cha_coef                  &
 #if (HWRF==1)
      &          ,mznt                                                 &
 #endif
@@ -138,7 +138,7 @@ CONTAINS
      &           ,onset_swi,offset_flag,offset_counter,offset_fdd,offset_swi &
      &           ,dayl,annavg_t2m,tempavg_t2m,tempsum_potential_gpp          &
      &           ,annsum_potential_gpp,tempmax_retransn,annmax_retransn      &
-     &           ,prev_leafc_to_litter,prev_frootc_to_litter,tempsum_npp     &
+     &           ,prev_leafc_to_litter,prev_frootc_t2o_litter,tempsum_npp     &
      &           ,annsum_npp,leafc,leafc_storage,leafc_xfer,frootc           &
      &           ,frootc_storage,frootc_xfer,livestemc,livestemc_storage     &
      &           ,livestemc_xfer,deadstemc,deadstemc_storage,deadstemc_xfer  &
@@ -382,7 +382,7 @@ CONTAINS
    USE module_sf_sstskin
    USE module_sf_tmnupdate
    USE module_sf_lake
-   USE module_cpl, ONLY : coupler_on, cpl_rcv
+   USE module_cpl, ONLY : coupler_on, cpl_rcv_sfcdrv
 !
 !  This driver calls subroutines for the surface parameterizations.
 !
@@ -486,6 +486,7 @@ CONTAINS
 !-- v10           diagnostic 10-m v component from surface layer
 !-- UOCE          sea surface zonal currents (m s-1)
 !-- VOCE          sea surface meridional currents (m s-1)
+!-- CHA_COEF      charnock coefficient from wave model ()
 !-- th2           diagnostic 2-m theta from surface layer and lsm
 !-- t2            diagnostic 2-m temperature from surface layer and lsm
 !-- q2            diagnostic 2-m mixing ratio from surface layer and lsm
@@ -675,6 +676,7 @@ CONTAINS
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT)::   XLAND
    INTEGER,                                          INTENT(IN   ) ::   MAX_EDOM
    REAL, DIMENSION( ims:ime , 1:max_edom, jms:jme ), INTENT(IN   ), OPTIONAL ::   CPLMASK
+   REAL, DIMENSION( ims:ime , jms:jme ), INTENT(IN   )::   COSA, SINA
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT)::   XICEM
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT)::   MAVAIL
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT)::   SNOALB
@@ -827,6 +829,7 @@ CONTAINS
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   V10E
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   UOCE
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   VOCE
+   REAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT):: CHA_COEF
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(OUT)::   PSFC
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT)::   ACSNOM
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT)::   SFCEVP
@@ -1434,25 +1437,12 @@ CONTAINS
   endif
 
   IF ( coupler_on .and. present(cplmask) .and. present(sst_input) ) THEN
-     
-     CALL cpl_rcv( id, 'SST',            &
+     CALL cpl_rcv_sfcdrv( id, max_edom, cplmask, cosa, sina,    &
+        &              SST_INPUT, SST, UOCE, VOCE,   &
+        &              CHA_COEF,   &
         &              ids, ide, jds, jde, kds, kde, &
         &              ims, ime, jms, jme, kms, kme, &
-        &              ips, ipe, jps, jpe, kps, kpe, &
-        &              max_edom, cplmask, SST, SST_INPUT )
-     
-     CALL cpl_rcv( id, 'UOCE',            &
-        &              ids, ide, jds, jde, kds, kde, &
-        &              ims, ime, jms, jme, kms, kme, &
-        &              ips, ipe, jps, jpe, kps, kpe, &
-        &              max_edom, cplmask, UOCE )
-     
-     CALL cpl_rcv( id, 'VOCE',            &
-        &              ids, ide, jds, jde, kds, kde, &
-        &              ims, ime, jms, jme, kms, kme, &
-        &              ips, ipe, jps, jpe, kps, kpe, &
-        &              max_edom, cplmask, VOCE )
-     
+        &              ips, ipe, jps, jpe, kps, kpe  )
   END IF
 
 #if (EM_CORE==1)
@@ -1980,6 +1970,7 @@ CONTAINS
                  gz1oz0,wspd,br,isfflx,dx2d,                         &
                  svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,eomeg,stbolt, &
                  P1000mb,                                            &
+                 CHA_COEF,                                           &
                  XICE,SST,TSK_SEA,                                                  &
                  CHS2_SEA,CHS_SEA,CPM_SEA,CQS2_SEA,FLHC_SEA,FLQC_SEA,               &
                  HFX_SEA,LH_SEA,QFX_SEA,QGH_SEA,QSFC_SEA,ZNT_SEA,                   &
@@ -1998,6 +1989,7 @@ CONTAINS
                gz1oz0,wspd,br,isfflx,dx2d,                         &
                svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,eomeg,stbolt, &
                P1000mb,                                            &
+               cha_coef,                                           &
                ids,ide, jds,jde, kds,kde,                          &
                ims,ime, jms,jme, kms,kme,                          &
                i_start(ij),i_end(ij), j_start(ij),j_end(ij), kts,kte,    &
@@ -2032,6 +2024,7 @@ CONTAINS
                  gz1oz0,wspd,br,isfflx,dx,                           &
                  svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,eomeg,stbolt, &
                  P1000mb,                                            &
+                 CHA_COEF,                                           &
                  XICE,SST,TSK_SEA,                                                  &
                  CHS2_SEA,CHS_SEA,CPM_SEA,CQS2_SEA,FLHC_SEA,FLQC_SEA,               &
                  HFX_SEA,LH_SEA,QFX_SEA,QGH_SEA,QSFC_SEA,ZNT_SEA,                   &
@@ -2050,6 +2043,7 @@ CONTAINS
                gz1oz0,wspd,br,isfflx,dx,                           &
                svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,eomeg,stbolt, &
                P1000mb,                                            &
+               cha_coef,                                           &
                ids,ide, jds,jde, kds,kde,                          &
                ims,ime, jms,jme, kms,kme,                          &
                i_start(ij),i_end(ij), j_start(ij),j_end(ij), kts,kte,    &
@@ -5526,6 +5520,7 @@ CONTAINS
                      SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                      KARMAN,EOMEG,STBOLT,                          &
                      P1000,                                      &
+                     CHA_COEF,                                   &
                      XICE,SST,TSK_SEA,                                                  &
                      CHS2_SEA,CHS_SEA,CPM_SEA,CQS2_SEA,FLHC_SEA,FLQC_SEA,               &
                      HFX_SEA,LH_SEA,QFX_SEA,QGH_SEA,QSFC_SEA,ZNT_SEA,                   &
@@ -5590,6 +5585,7 @@ CONTAINS
                INTENT(INOUT)   ::                            ZNT, &
                                                              ZOL, &
                                                              UST, &
+                                                        CHA_COEF, &
                                                              CPM, &
                                                             CHS2, &
                                                             CQS2, &
@@ -5777,7 +5773,8 @@ CONTAINS
                  GZ1OZ0,WSPD,BR,ISFFLX,DX,                     &
                  SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                  KARMAN,EOMEG,STBOLT,                          &
-                 P1000,                                      &
+                 P1000,                                        &
+                 CHA_COEF,                                     &
                  ids,ide, jds,jde, kds,kde,                    &
                  ims,ime, jms,jme, kms,kme,                    &
                  its,ite, jts,jte, kts,kte,                    &
@@ -5867,7 +5864,8 @@ CONTAINS
                  ISFFLX,DX,                                    &
                  SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                  KARMAN,EOMEG,STBOLT,                          &
-                 P1000,                                      &
+                 P1000,                                        &
+                 CHA_COEF,                                     &
                  ids,ide, jds,jde, kds,kde,                    &
                  ims,ime, jms,jme, kms,kme,                    &
                  its,ite, jts,jte, kts,kte,                    & ! 0
@@ -5941,6 +5939,7 @@ CONTAINS
                      SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                      KARMAN,EOMEG,STBOLT,                          &
                      P1000,                                        &
+                     CHA_COEF,                                     &
 XICE,SST,TSK_SEA,                                                  &
 CHS2_SEA,CHS_SEA,CPM_SEA,CQS2_SEA,FLHC_SEA,FLQC_SEA,               &
 HFX_SEA,LH_SEA,QFX_SEA,QGH_SEA,QSFC_SEA,ZNT_SEA,                   &
@@ -6005,6 +6004,7 @@ ITIMESTEP,TICE2TSK_IF2COLD,XICE_THRESHOLD,                         &
                INTENT(INOUT)   ::                            ZNT, &
                                                              ZOL, &
                                                              UST, &
+                                                        CHA_COEF, &
                                                              CPM, &
                                                             CHS2, &
                                                             CQS2, &
@@ -6199,6 +6199,7 @@ ITIMESTEP,TICE2TSK_IF2COLD,XICE_THRESHOLD,                         &
                  SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                  KARMAN,EOMEG,STBOLT,                          &
                  P1000,                                        &
+                 CHA_COEF,                                     &
                  ids,ide, jds,jde, kds,kde,                    &
                  ims,ime, jms,jme, kms,kme,                    &
                  its,ite, jts,jte, kts,kte,                    &
@@ -6290,7 +6291,8 @@ ITIMESTEP,TICE2TSK_IF2COLD,XICE_THRESHOLD,                         &
                  ISFFLX,DX,                                    &
                  SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                  KARMAN,EOMEG,STBOLT,                          &
-                 P1000,                                      &
+                 P1000,                                        &
+                 CHA_COEF,                                     &
                  ids,ide, jds,jde, kds,kde,                    &
                  ims,ime, jms,jme, kms,kme,                    &
                  its,ite, jts,jte, kts,kte,                    & ! 0

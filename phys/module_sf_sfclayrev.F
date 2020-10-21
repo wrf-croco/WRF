@@ -21,6 +21,7 @@ CONTAINS
                      SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                      KARMAN,EOMEG,STBOLT,                          &
                      P1000mb,                                      &
+                     CHA_COEF,                                     &
                      ids,ide, jds,jde, kds,kde,                    &
                      ims,ime, jms,jme, kms,kme,                    &
                      its,ite, jts,jte, kts,kte,                    &
@@ -50,6 +51,7 @@ CONTAINS
 !-- UST         u* in similarity theory (m/s)
 !-- USTM        u* in similarity theory (m/s) without vconv correction
 !               used to couple with TKE scheme
+!-- CHA_COEF    charnock coefficient from wave model
 !-- PBLH        PBL height from previous time (m)
 !-- MAVAIL      surface moisture availability (between 0 and 1)
 !-- ZOL         z/L height over Monin-Obukhov length
@@ -168,6 +170,7 @@ CONTAINS
                 INTENT(INOUT)   ::                            ZNT, &
                                                               ZOL, &
                                                               UST, &
+                                                         CHA_COEF, &
                                                               CPM, &
                                                              CHS2, &
                                                              CQS2, &
@@ -231,6 +234,7 @@ CONTAINS
                 GZ1OZ0(ims,j),WSPD(ims,j),BR(ims,j),ISFFLX,DX,     &
                 SVP1,SVP2,SVP3,SVPT0,EP1,EP2,KARMAN,EOMEG,STBOLT,  &
                 P1000mb,                                           &
+                CHA_COEF(ims,j),                                   &
                 ids,ide, jds,jde, kds,kde,                         &
                 ims,ime, jms,jme, kms,kme,                         &
                 its,ite, jts,jte, kts,kte                          &
@@ -256,6 +260,7 @@ CONTAINS
                      SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                      KARMAN,EOMEG,STBOLT,                          &
                      P1000mb,                                      &
+                     CHA_COEF,                                     &
                      ids,ide, jds,jde, kds,kde,                    &
                      ims,ime, jms,jme, kms,kme,                    &
                      its,ite, jts,jte, kts,kte,                    &
@@ -302,6 +307,7 @@ CONTAINS
                 INTENT(INOUT)   ::                            ZNT, &
                                                               ZOL, &
                                                               UST, &
+                                                         CHA_COEF, &
                                                               CPM, &
                                                              CHS2, &
                                                              CQS2, &
@@ -981,7 +987,17 @@ CONTAINS
 !         ZNT(I)=CZC*UST(I)*UST(I)/G+0.11*1.5E-5/UST(I)
 ! AHW: change roughness length, and hence the drag coefficients Ck and Cd
           IF ( PRESENT(ISFTCFLX) ) THEN
-             IF ( ISFTCFLX.NE.0 ) THEN
+             IF ( ISFTCFLX.EQ.5 ) THEN
+! Swen Jullien: isftcflx=5 is for coupling with a wave model
+! varying charnock coefficient CHA_COEF from the wave model is used instead
+! of CZO in the computation of roughness length ZNT
+                ZNT(I)=CHA_COEF(I)*UST(I)*UST(I)/G+0.11*1.5E-5/UST(I)
+             ELSEIF ( ISFTCFLX.EQ.6 ) THEN
+! SJ: isftcflx=6 is for saturating classical charnock coefficient
+! to a given level 
+                ZNT(I)=CZO*UST(I)*UST(I)/G+0.11*1.5E-5/UST(I)
+                ZNT(I)=MIN(ZNT(I),7.0e-3)
+             ELSEIF ( ISFTCFLX.EQ.1 .OR. ISFTCFLX.EQ.2 ) THEN
 !               ZNT(I)=10.*exp(-9.*UST(I)**(-.3333))
 !               ZNT(I)=10.*exp(-9.5*UST(I)**(-.3333))
 !               ZNT(I)=ZNT(I) + 0.11*1.5E-5/AMAX1(UST(I),0.01)
