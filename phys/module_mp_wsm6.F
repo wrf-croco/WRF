@@ -77,6 +77,9 @@ CONTAINS
 #ifdef WRF_CHEM
                  ,evapprod, rainprod                               &
 #endif
+#ifdef USE_MYDROP
+                 ,MYDROP                                           &
+#endif
                                                                    )
 !-------------------------------------------------------------------
   IMPLICIT NONE
@@ -93,6 +96,14 @@ CONTAINS
                                                               qr, &
                                                               qs, &
                                                               qg
+#ifdef USE_MYDROP
+  REAL, DIMENSION( ims:ime , jms:jme ),                           &
+        INTENT(INOUT) ::                                          &
+                                                           MYDROP
+  REAL, DIMENSION( ims:ime , jms:jme ) ::                         &
+                                                           qc02D  &
+                                                          ,qck12D
+#endif
   REAL, DIMENSION( ims:ime , kms:kme , jms:jme ),                 &
         INTENT(IN   ) ::                                          &
                                                              den, &
@@ -183,7 +194,17 @@ CONTAINS
          ENDDO
          !  Sending array starting locations of optional variables may cause
          !  troubles, so we explicitly change the call.
-         CALL wsm62D(t, q(ims,kms,j), qci, qrs                     &
+#ifdef USE_MYDROP
+         ! FIRST, INIT
+         CALL wsm6init2(MYDROP(ims:ime,j),qc02D(ims:ime,j),qck12D(ims:ime,j),den0,denr &
+                       ,dens,ims,ime)
+         ! THEN, CALL WSM6D2 with vectore
+         CALL wsm62D(MYDROP(ims:ime,j)                             &
+                    ,qck12D(ims:ime,j),qc02D(ims:ime,j),           &
+#else
+         CALL wsm62D(                                              &
+#endif
+                    t, q(ims,kms,j), qci, qrs                      &
                     ,den(ims,kms,j)                                &
                     ,p(ims,kms,j), delz(ims,kms,j)                 &
                     ,delt,g, cpd, cpv, rd, rv, t0c                 &
@@ -404,6 +425,12 @@ CONTAINS
                                                           work2c, &
                                                            workr, &
                                                            worka
+#ifdef USE_MYDROP
+  REAL, DIMENSION( ims:ime )           ::                         &
+                                                         MYDROP,  &
+                                                         qc01D,   &
+                                                         qck11D
+#endif
   REAL, DIMENSION( its:ite , kts:kte ) ::                         &
                                                          den_tmp, &
                                                         delz_tmp
@@ -861,8 +888,13 @@ CONTAINS
 !           pfrzdtc = min(pfrz1*(exp(pfrz2*supcol)-1.)                         &
 !              *den(i,k)/denr/xncr*qci(i,k,1)**2*dtcld,qci(i,k,1))
             supcolt=min(supcol,50.)
+#ifdef USE_MYDROP
+            pfrzdtc = min(pfrz1*(exp(pfrz2*supcolt)-1.)                        &
+            *den(i,k)/denr/MYDROP(i)*qci(i,k,1)*qci(i,k,1)*dtcld,qci(i,k,1))
+#else
             pfrzdtc = min(pfrz1*(exp(pfrz2*supcolt)-1.)                        &
             *den(i,k)/denr/xncr*qci(i,k,1)*qci(i,k,1)*dtcld,qci(i,k,1))
+#endif
             qci(i,k,2) = qci(i,k,2) + pfrzdtc
             t(i,k) = t(i,k) + xlf/cpm(i,k)*pfrzdtc
             qci(i,k,1) = qci(i,k,1)-pfrzdtc
@@ -931,10 +963,17 @@ CONTAINS
 ! praut: auto conversion rate from cloud to rain [HDC 16]
 !        (C->R)
 !---------------------------------------------------------------
+#ifdef USE_MYDROP
+         if(qci(i,k,1).gt.qc01D(i)) then
+            praut(i,k) = qck11D(i)*qci(i,k,1)**(7./3.)
+            praut(i,k) = min(praut(i,k),qci(i,k,1)/dtcld)
+          endif
+#else
           if(qci(i,k,1).gt.qc0) then
             praut(i,k) = qck1*qci(i,k,1)**(7./3.)
             praut(i,k) = min(praut(i,k),qci(i,k,1)/dtcld)
           endif
+#endif
 !---------------------------------------------------------------
 ! pracw: accretion of cloud water by rain [HL A40] [LFO 51]
 !        (C->R)
@@ -1559,6 +1598,28 @@ CONTAINS
       endif
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END FUNCTION fpvs
+!-------------------------------------------------------------------
+#ifdef USE_MYDROP
+  SUBROUTINE wsm6init2(MYDROP,qc02D,qck12D,den0,denr,dens,ims,ime)
+!-------------------------------------------------------------------
+  REAL, DIMENSION( ims:ime ),                           &
+        INTENT(IN   ) ::                                          &
+                                                           MYDROP
+  REAL, DIMENSION( ims:ime ),                           &
+        INTENT(INOUT) ::                                          &
+                                                           qc02D  &
+                                                          ,qck12D
+
+!-------------------------------------------------------------------
+
+      DO i=ims,ime
+            qc02D(i)  = 4./3.*pi*denr*r0**3*MYDROP(i)/den0
+            qck12D(i) = .104*9.8*peaut/(MYDROP(i)*denr)**(1./3.)/xmyu*den0**(4./3.)
+      ENDDO
+
+  END SUBROUTINE wsm6init2
+#endif
+
 !-------------------------------------------------------------------
   SUBROUTINE wsm6init(den0,denr,dens,cl,cpv,hail_opt,allowed_to_read)
 !-------------------------------------------------------------------

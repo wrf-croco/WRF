@@ -3599,8 +3599,11 @@ BENCH_START(micro_driver_tim)
 #      include "HALO_EM_SBM.inc"
 #endif
 
-
+#ifdef USE_MYDROP
+     CALL microphysics_driver(MYDROP=grid%MYDROP,                         &
+#else
      CALL microphysics_driver(                                            &
+#endif
       &         DT=dtm             ,DX=grid%dx              ,DY=grid%dy   &
       &        ,DZ8W=dz8w          ,F_ICE_PHY=grid%f_ice_phy              &
       &        ,ITIMESTEP=grid%itimestep             ,LOWLYR=grid%lowlyr  &
