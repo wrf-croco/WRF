@@ -910,6 +910,9 @@ BENCH_START(surf_driver_tim)
      &     grid%j_start(1),min(grid%j_end(1), jde-1) )
 #endif
 
+   grid%u_phyL1(ips:ipe,jps:jpe) = grid%u_phy(ips:ipe,kps,jps:jpe)
+   grid%v_phyL1(ips:ipe,jps:jpe) = grid%v_phy(ips:ipe,kps,jps:jpe)
+
 BENCH_END(surf_driver_tim)
 
 !*********
