@@ -912,6 +912,9 @@ BENCH_START(surf_driver_tim)
 
    grid%u_phyL1(ips:ipe,jps:jpe) = grid%u_phy(ips:ipe,kps,jps:jpe)
    grid%v_phyL1(ips:ipe,jps:jpe) = grid%v_phy(ips:ipe,kps,jps:jpe)
+   grid%t_phyL1(ips:ipe,jps:jpe) = grid%t_phy(ips:ipe,kps,jps:jpe)
+   grid%qvL1(ips:ipe,jps:jpe) = moist(ips:ipe,kps,jps:jpe,P_QV)
+   grid%rhoL1(ips:ipe,jps:jpe) = grid%rho(ips:ipe,kps,jps:jpe)
 
 BENCH_END(surf_driver_tim)
 
