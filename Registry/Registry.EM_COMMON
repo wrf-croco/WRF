@@ -2293,6 +2293,61 @@ rconfig   real     nssl_rho_qhl           namelist,physics      max_domains  900
 rconfig   real     nssl_rho_qs            namelist,physics      max_domains  100.     rh       "Snow particle density"  ""      ""
 
 
+
+# GLmod
+
+# buffer zones
+rconfig   logical   asiv_isbuffer    namelist,asiv    1               .false.    -    "to include the buffer zone" "" ""
+rconfig	  logical   asiv_isbuffer_flux namelist,asiv  1		      .false.	 -    "buffer in latent heat flux as well" "" ""
+
+state    real   buffer_u        ij     dyn_em      1         X      ihr        "u_buffer"        ""   ""          
+state    real   buffer_v        ij     dyn_em      1         Y      ihr        "v_buffer" "" ""
+state    real   buffer_w        ij     dyn_em      1         - ihr     "w_buffer"  "" ""
+state    real   buffer_t         ij     dyn_em      1         - ihr      "t_buffer" "" "" 
+
+rconfig   real      asiv_tau_buffer      namelist,asiv    1               36000.      irh   "timescale for buffer zone" "" ""
+rconfig   real      asiv_width_buffer      namelist,asiv    1               250.      irh   "width of buffer zone (in km)" "" ""
+
+rconfig   logical   asiv_drycase    namelist,asiv    1               .true.    -    "to set QV to zero each time radiative scheme is called" "" ""
+rconfig   logical   asiv_with_currents    namelist,asiv    1               .false.    -    "to set if currents are taken into account in surface schemes" "" ""
+
+# pour Coriolis
+rconfig   real      asiv_phieq      namelist,asiv    1               40.      irh   "equivalent latitude at yrelax" "" ""
+rconfig   real      asiv_lbeta      namelist,asiv    1               1500.    irh   "width of region where beta is not zero" "" ""
+
+# grille verticale du modele
+rconfig   integer   asiv_stretch_grid    namelist,asiv    1               0   -    "stretch_grid"  "0=linear, 1=tanh, 2=exp"  ""
+rconfig   real      asiv_z_scale         namelist,asiv    1               1.        -    "z_scale"  "The factor of the stretching, the smaller the more stretch"  "factor"
+
+# condition initiale
+rconfig   real      asiv_ybeta      namelist,asiv    1               1500.    irh   "y position for beta" "" ""
+rconfig   integer   asiv_create_sst  namelist,asiv   1               0    -         "SST initialization" "" ""
+
+# pour epaisseur optique
+rconfig   real      asiv_deltath_z  namelist,asiv    1               10       irh   "vertical profile for optical thickness" "" ""
+rconfig   real      asiv_tau0eq     namelist,asiv    1               6.       irh   "longwave optical depth limit at the south/equator" "" ""
+rconfig   real      asiv_tau0pole   namelist,asiv    1               1.5      irh   "longwave optical depth limit at the north/pole" "" ""
+rconfig   real      asiv_radflin    namelist,asiv    1               0.1      irh   "linear optical depth parameter" "" ""
+rconfig   logical   asiv_is_tau_front namelist,asiv  1               .false.   -    "set dependance for tau with latitude in tanh()" "" ""
+rconfig   logical   asiv_is_tau_invert namelist,asiv 1               .false.   -    "set dependance for tau with pressure coordinate " "" ""
+rconfig   real      asiv_ytau       namelist,asiv    1               3800     irh   "y location for optical depth front (in km)" "" ""
+rconfig   real      asiv_ltau       namelist,asiv    1               500      irh   "width in y for optical depth front (in km)" "" ""
+rconfig   logical   asiv_use_tsk_tau       namelist,asiv    1        .true.   irh   "true to define optical depth including sst anomalies" "" ""
+rconfig   logical   asiv_use_tsk_rad_bc   namelist,asiv    1         .true.   irh   "true to include sst anomalies in radiative BC at surface" "" ""
+
+# utilise dans condition initiale et dans optical depth
+rconfig   real      asiv_ssteq      namelist,asiv    1               298.     irh   "sst limit at the south/equator (in K)" "" ""
+rconfig   real      asiv_sstpole    namelist,asiv    1               275.     irh   "sst limit at the north/pole (in K)" "" ""
+rconfig   real      asiv_ysst       namelist,asiv    1               3800     irh   "y location for oceanic front (in km)" "" ""
+rconfig   real      asiv_lsst       namelist,asiv    1               500      irh   "width in y for oceanic front (in km)" "" ""
+
+
+# GLend
+
+
+
+
+
 # Lightning Qv Nudging 
 rconfig   integer  nudge_lightning        namelist,physics      max_domains   0       rh       "flag for lightning Qv nudging"  ""      ""
 rconfig   integer  nudge_light_times      namelist,physics      max_domains   0       rh       "start time in sec (domain relative) for lightning Qv nudging"  ""      ""
@@ -3445,4 +3500,5 @@ xpose XPOSE_SPECTRAL_NUDGING dyn_em dif_analysis,dif_xxx,dif_yyy
 
 package   no_fft_used    fft_used==0                  -             -
 package   any_fft_used   fft_used==1                  -             state:t_xxx,u_xxx,ru_xxx,v_xxx,rv_xxx,w_xxx,ww_xxx,ph_xxx,dum_yyy,fourd_xxx
+
 
