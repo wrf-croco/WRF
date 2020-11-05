@@ -186,7 +186,10 @@ END SUBROUTINE rk_step_prep
 
 !-------------------------------------------------------------------------------
 
-SUBROUTINE rk_tendency ( config_flags, rk_step,                           &
+!GLmod
+! SUBROUTINE rk_tendency ( config_flags, rk_step,                           &
+!GLend
+SUBROUTINE rk_tendency (grid, config_flags, rk_step,                  &
                          ru_tend, rv_tend, rw_tend, ph_tend, t_tend,      &
                          ru_tendf, rv_tendf, rw_tendf, ph_tendf, t_tendf, &
                          mu_tend, u_save, v_save, w_save, ph_save,        &
@@ -219,6 +222,12 @@ SUBROUTINE rk_tendency ( config_flags, rk_step,                           &
    !  Input data.
 
    TYPE(grid_config_rec_type)    ,           INTENT(IN   ) :: config_flags
+
+
+!GLmod
+   TYPE (domain), INTENT(IN) :: grid
+!GLend
+
 
    INTEGER ,               INTENT(IN   ) :: ids, ide, jds, jde, kds, kde, &
                                             ims, ime, jms, jme, kms, kme, &
@@ -624,11 +633,16 @@ SUBROUTINE rk_tendency ( config_flags, rk_step,                           &
 
 ! Damping option added for Held-Suarez test (also uses lw option HELDSUAREZ)
       IF (config_flags%ra_lw_physics == HELDSUAREZ) THEN
-         CALL held_suarez_damp ( ru_tend, rv_tend,               &   
+!GLmod
+         CALL held_suarez_damp (grid, ru_tend, rv_tend,               &   
+                                rw_tend, t_tend, &
+                                rw,t,&
                                  ru,rv,p,pb,                     &
                                  ids, ide, jds, jde, kds, kde,   &
                                  ims, ime, jms, jme, kms, kme,   &
                                  its, ite, jts, jte, kts, kte   )
+!GLend
+
       END IF
 
 !**************************************************************

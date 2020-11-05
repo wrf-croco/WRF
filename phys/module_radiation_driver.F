@@ -2066,11 +2066,16 @@ CONTAINS
         CASE (HELDSUAREZ)
              CALL wrf_debug (100, 'CALL heldsuarez')
 
-             CALL HSRAD(RTHRATEN,p8w,p,pi,dz8w,t,          &
+! GLmod --------------------------------------------------
+! Passer la tsk en argument afin d'avoir la condition
+!  sur le flux LW montant en la surface
+             CALL HSRAD(RTHRATEN,GLW,GSW,p8w,p,pi,dz8w,t,          &
                      t8w, rho, R_d,G,CP, dt, xlat, degrad, &
+                     QV,tsk,                                           &
                      ids,ide, jds,jde, kds,kde,            &
                      ims,ime, jms,jme, kms,kme,            &
                      its,ite, jts,jte, kts,kte            )
+!GLend
 
 ! -- add by Jin Kong 10/2011
         CASE (FLGLWSCHEME)
