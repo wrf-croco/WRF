@@ -803,7 +803,11 @@ BENCH_START(rk_tend_tim)
      DO ij = 1 , grid%num_tiles
 
        CALL wrf_debug ( 200 , ' call rk_tendency' )
-       CALL rk_tendency ( config_flags, rk_step                                                                &
+
+!GLmod
+!       CALL rk_tendency ( config_flags, rk_step                                                                &
+!GLend
+       CALL rk_tendency ( grid, config_flags, rk_step                                                  &
                          ,grid%ru_tend, grid%rv_tend, rw_tend, ph_tend, t_tend                                 &
                          ,ru_tendf, rv_tendf, rw_tendf, ph_tendf, t_tendf                                      &
                          ,mu_tend, grid%u_save, grid%v_save, w_save, ph_save                                   &

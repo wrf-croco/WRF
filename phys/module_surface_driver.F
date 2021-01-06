@@ -1,9 +1,17 @@
 !WRF:MEDIATION_LAYER:PHYSICS
 !
 MODULE module_surface_driver
+
+!GLmod
+  USE module_domain
+!GLend
+
 CONTAINS
 
-   SUBROUTINE surface_driver(                                         &
+!GLmod
+!   SUBROUTINE surface_driver(                                         &
+!GLend
+   SUBROUTINE surface_driver(grid,                                         &
      &           HYDRO_dt,sfcheadrt,INFXSRT,soldrain,                 &
      &           acgrdflx,achfx,aclhf                                 &
      &          ,acsnom,acsnow,snowfallac,akhs,akms,albedo,br,canwat  &
@@ -580,6 +588,10 @@ CONTAINS
 !
 !******************************************************************
 !------------------------------------------------------------------
+
+!GLmod
+      TYPE (domain), INTENT(IN) :: grid
+!Glend
 
    INTEGER, INTENT(IN) ::                                             &
      &           ids,ide,jds,jde,kds,kde                              &
@@ -1390,6 +1402,14 @@ CONTAINS
    INTEGER                                             ::   spp_lsm_loc
 
    real,    optional,  dimension(ims:ime,jms:jme ),intent(inout) :: XLAIDYN
+
+
+!GLmod
+   logical :: is_buffer_flux
+!GLend
+
+
+
 ! IRRIGATION
    INTEGER :: tloc, jmonth,timing  
    REAL, PARAMETER    :: PI_GRECO=3.14159 
@@ -4188,7 +4208,60 @@ CONTAINS
 
    ENDIF
 
+
+!GLmod
+   call nl_get_asiv_isbuffer_flux(1,is_buffer_flux)
+   IF(is_buffer_flux) THEN
+
+    !$OMP PARALLEL DO   &
+    !$OMP PRIVATE (i,j, ij)
+      DO ij = 1 , num_tiles
+      call damping_flux(grid,qfx,lh, &
+                ids, ide, jds, jde, kds, kde,                       &
+                ims, ime, jms, jme, kms, kme,                       &
+                i_start(ij),i_end(ij), j_start(ij),j_end(ij), kts,kte   )
+      ENDDO
+    !$OMP END PARALLEL DO
+
+   ENDIF
+
+!GLend   
+
+
    END SUBROUTINE surface_driver
+
+
+!-------------------------------------------------------------------------
+!GLmod
+      subroutine damping_flux(grid,qfx,lh, &
+        &     IDS,IDE,JDS,JDE,KDS,KDE,                        &
+        &     IMS,IME,JMS,JME,KMS,KME,                        &
+        &     ITS,ITE,JTS,JTE,KTS,KTE )
+
+     REAL,DIMENSION(IMS:IME,JMS:JME),        INTENT(INOUT)   :: QFX,LH
+     INTEGER,INTENT(IN) :: IDS,IDE,JDS,JDE,KDS,KDE,       &
+          &                IMS,IME,JMS,JME,KMS,KME,       &
+          &                ITS,ITE,JTS,JTE,KTS,KTE
+
+   TYPE (domain), INTENT(IN) :: grid
+    integer :: i,j
+    real :: time_scale,dt,coef
+
+
+   DO j = jts,MIN(jte,jde-1)
+   DO i = its,MIN(ite,ide-1)
+      qfx(i,j)=qfx(i,j)*(1.-grid%buffer_t(i,j))
+      lh(i,j)=lh(i,j)*(1.-grid%buffer_t(i,j))
+   END DO
+   END DO
+
+
+
+      end subroutine damping_flux
+
+
+!GLend
+
 
 !-------------------------------------------------------------------------
 !-------------------------------------------------------------------------
