@@ -755,7 +755,9 @@ CONTAINS
          &              ids, ide, jds, jde, kds, kde, &
          &              ims, ime, jms, jme, kms, kme, &
          &              ips, ipe, jps, jpe, kps, kpe, &
-         &              max_edom, CPLMASK, CHA_COEF, cst=0.0185 )
+         &              max_edom, CPLMASK, CHA_COEF, pdataobs=CHA_COEF)
+! LR, CHA_COEF IN WRFLOWINPUT when no data from WW3
+!         &              max_edom, CPLMASK, CHA_COEF, cst=0.0185 )
       
    END SUBROUTINE cpl_rcv_sfcdrv
 
