@@ -469,6 +469,7 @@ CONTAINS
       REAL, ALLOCATABLE, DIMENSION(:,:) ::  areat    ! cell area
       INTEGER, ALLOCATABLE, DIMENSION(:,:) :: rmask  ! mask
       INTEGER :: j,i                                 ! local loop indices
+      CHARACTER( 3) :: clwrfdom                      ! d<domain>
       INTEGER :: error_flg
       !!--------------------------------------------------------------------
 
@@ -495,9 +496,15 @@ CONTAINS
       ! Model grid longitudes and latitudes
       !------------------------------------------------------------------
       !-- t-grid --
-      CALL oasis_write_grid('atmt',ide,jde,       &
-         &           grid%XLONG(ips:ipe,jps:jpe), &
-         &           grid%XLAT(ips:ipe,jps:jpe),  &
+      IF ( grid%id > 1 ) THEN
+          WRITE(clwrfdom, fmt="('d',i2.2)") grid%id
+      ELSE
+          WRITE(clwrfdom, fmt="('   ')")
+      ENDIF
+
+      CALL oasis_write_grid('atmt'//trim(clwrfdom),ide,jde, &
+         &           grid%XLONG(ips:ipe,jps:jpe),           &
+         &           grid%XLAT(ips:ipe,jps:jpe),            &
          &           id_part)
 
       !------------------------------------------------------------------
@@ -518,9 +525,9 @@ CONTAINS
         ENDDO
       ENDDO
 
-      CALL oasis_write_corner('atmt', ide, jde, 4, &
-         &             clont(ips:ipe,jps:jpe,:),   &
-         &             clatt(ips:ipe,jps:jpe,:),   &
+      CALL oasis_write_corner('atmt'//trim(clwrfdom), ide, jde, 4, &
+         &             clont(ips:ipe,jps:jpe,:),                   &
+         &             clatt(ips:ipe,jps:jpe,:),                   &
          &             id_part)
 
       !------------------------------------------------------------------
@@ -532,8 +539,8 @@ CONTAINS
         ENDDO
       ENDDO
 
-      CALL oasis_write_area('atmt', ide, jde,              &
-         &                         areat(ips:ipe,jps:jpe), &
+      CALL oasis_write_area('atmt'//trim(clwrfdom), ide, jde, &
+         &                         areat(ips:ipe,jps:jpe),    &
          &                         id_part)
 
       !------------------------------------------------------------------
@@ -546,10 +553,10 @@ CONTAINS
         ENDDO
       ENDDO
 
-      CALL oasis_write_mask('atmt', ide, jde,          &
-         &                     rmask(ips:ipe,jps:jpe), &
+      CALL oasis_write_mask('atmt'//trim(clwrfdom), ide, jde, &
+         &                     rmask(ips:ipe,jps:jpe),        &
          &                     id_part)
-
+ 
       !------------------------------------------------------------------
       ! Terminate grid writing
       !------------------------------------------------------------------
