@@ -3,8 +3,11 @@
 !
 MODULE module_microphysics_driver
 CONTAINS
-
+#ifdef USE_MYDROP
+SUBROUTINE microphysics_driver(MYDROP,                                   &
+#else
 SUBROUTINE microphysics_driver(                                          &
+#endif
                        th, rho, pi_phy, p                                &
                       ,ht, dz8w, p8w, dt,dx,dy                           &
                       ,mp_physics, spec_zone                             &
@@ -637,6 +640,11 @@ REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                        &
          OPTIONAL,                                                &
          INTENT(OUT ) ::                                          &
                   nsource
+#ifdef USE_MYDROP
+   REAL, DIMENSION( ims:ime , jms:jme ),                          &
+         INTENT(INOUT) ::                                         &
+                                                           MYDROP
+#endif
 
 !
    REAL, DIMENSION( ims:ime , jms:jme ),                          &
@@ -2352,6 +2360,9 @@ REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                        &
                  ,ITS=its,ITE=ite, JTS=jts,JTE=jte, KTS=kts,KTE=kte &
 #ifdef WRF_CHEM
                  ,EVAPPROD=evapprod,RAINPROD=rainprod               &
+#endif
+#ifdef USE_MYDROP
+                 ,MYDROP=MYDROP                                     &
 #endif
                                                                     )
              ELSE

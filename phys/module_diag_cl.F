@@ -30,6 +30,19 @@ CONTAINS
                      ,skintempclmin,skintempclmax                     & ! CLWRF
                      ,tskintempclmin,tskintempclmax                   & ! CLWRF
                      ,skintempclmean,skintempclstd                    & ! CLWRF
+                     ,u_phy_01,v_phy_01,uoce,voce,rho_01,ust          &
+                     ,u_01,v_01,wspd_01,twspd_01clmax                 &
+                     ,u_01clmax,v_01clmax,wspd_01clmax                &
+                     ,u_01clmean,v_01clmean,wspd_01clmean             &
+                     ,u_01clstd,v_01clstd,wspd_01clstd                &
+                     ,utau,vtau,taum,ttaumclmax                       &
+                     ,utauclmax,vtauclmax,taumclmax                   &
+                     ,utauclmean,vtauclmean,taumclmean                &
+                     ,utauclstd,vtauclstd,taumclstd                   &
+                     ,u_uo,v_vo,wspd_uo,twspd_uoclmax                 &
+                     ,u_uoclmax,v_voclmax,wspd_uoclmax                &
+                     ,u_uoclmean,v_voclmean,wspd_uoclmean             &
+                     ,u_uoclstd,v_voclstd,wspd_uoclstd                &
                      ,raincv,rainncv                                  &
                      ,dt,xtime,curr_secs2                             &
                      ,nsteps                                          &
@@ -142,6 +155,35 @@ CONTAINS
 ! local vars
    REAL                                      :: t273
 
+!!-------------------
+!! Additionnal variables
+
+   REAL, DIMENSION(ims:ime, jms:jme),                                             &
+                          INTENT(IN) :: u_phy_01,v_phy_01
+   REAL, DIMENSION(ims:ime, jms:jme),                                             &
+                          INTENT(IN) :: uoce,voce
+   REAL, DIMENSION(ims:ime, jms:jme),                                             &
+                          INTENT(IN) :: rho_01,ust
+
+   REAL, DIMENSION(ims:ime, jms:jme),                                             &
+                          INTENT(OUT) :: u_01,v_01,wspd_01,                       &
+                          twspd_01clmax,                                          &
+                          u_01clmax,v_01clmax,wspd_01clmax,                       &
+                          u_01clmean,v_01clmean,wspd_01clmean,                    &
+                          u_01clstd,v_01clstd,wspd_01clstd
+   REAL, DIMENSION(ims:ime, jms:jme),                                             &
+                          INTENT(OUT) :: utau,vtau,taum,                          &
+                          ttaumclmax,                                             &
+                          utauclmax,vtauclmax,taumclmax,                          &
+                          utauclmean,vtauclmean,taumclmean,                       &
+                          utauclstd,vtauclstd,taumclstd
+   REAL, DIMENSION(ims:ime, jms:jme),                                             &
+                          INTENT(OUT) :: u_uo,v_vo,wspd_uo,                       &
+                          twspd_uoclmax,                                          &
+                          u_uoclmax,v_voclmax,wspd_uoclmax,                       &
+                          u_uoclmean,v_voclmean,wspd_uoclmean,                    &
+                          u_uoclstd,v_voclstd,wspd_uoclstd
+
 !-----------------------------------------------------------------
 
    t273  = 273.
@@ -185,6 +227,27 @@ CONTAINS
           skintempclmax(i,j)=skintemp(i,j)-t273
           skintempclmean(i,j)=skintemp(i,j)-t273
           skintempclstd(i,j)=(skintemp(i,j)-t273)*(skintemp(i,j)-t273)
+          u_01(i,j)=u_phy_01(i,j)
+          v_01(i,j)=v_phy_01(i,j)
+          wspd_01(i,j)=sqrt(u_phy_01(i,j)*u_phy_01(i,j)+v_phy_01(i,j)*v_phy_01(i,j))
+          wspd_01clmax(i,j)=wspd_01(i,j)
+          u_01clmean(i,j)=u_01(i,j)
+          v_01clmean(i,j)=v_01(i,j)
+          wspd_01clmean(i,j)=wspd_01(i,j)
+          u_uo(i,j)=u_01(i,j)-uoce(i,j)
+          v_vo(i,j)=v_01(i,j)-voce(i,j)
+          wspd_uo(i,j)=MAX(SQRT(u_uo(i,j)*u_uo(i,j)+v_vo(i,j)*v_vo(i,j)),1.e-7)
+          wspd_uoclmax(i,j)=wspd_uo(i,j)
+          u_uoclmean(i,j)=u_uo(i,j)
+          v_voclmean(i,j)=v_vo(i,j)
+          wspd_uoclmean(i,j)=wspd_uo(i,j)
+          taum(i,j)=rho_01(i,j)*ust(i,j)*ust(i,j)
+          utau(i,j)=taum(i,j)*u_uo(i,j)/wspd_uo(i,j)
+          vtau(i,j)=taum(i,j)*v_vo(i,j)/wspd_uo(i,j)
+          taumclmax(i,j)=taum(i,j)
+          utauclmean(i,j)=utau(i,j)
+          vtauclmean(i,j)=vtau(i,j)
+          taumclmean(i,j)=taum(i,j)
           ! reinitialize times
           tt2clmin(i,j)       = xtime + dt/60.  ! value at end of timestep 
           tt2clmax(i,j)       = xtime + dt/60.
@@ -221,6 +284,18 @@ CONTAINS
           CALL varstatistics(skintemp-t273,xtimep,ime-ims+1,jme-jms+1,skintempclmin,&
             skintempclmax,tskintempclmin,tskintempclmax,skintempclmean,       &
             skintempclstd)
+! Surface stress
+          CALL varstatisticsWIND(utau,vtau,xtimep,ime-ims+1,jme-jms+1,utauclmax, &
+            vtauclmax,taumclmax,ttaumclmax,utauclmean,vtauclmean,taumclmean, &
+            utauclstd,vtauclstd,taumclstd)
+! First level wind speed
+          CALL varstatisticsWIND(u_01,v_01,xtimep,ime-ims+1,jme-jms+1,u_01clmax, &
+            v_01clmax,wspd_01clmax,twspd_01clmax,u_01clmean,v_01clmean,      &
+            wspd_01clmean,u_01clstd,v_01clstd,wspd_01clstd)
+! First level relative wind speed (compared to ocean)
+          CALL varstatisticsWIND(u_uo,v_vo,xtimep,ime-ims+1,jme-jms+1,u_uoclmax, &
+            v_voclmax,wspd_uoclmax,twspd_uoclmax,u_uoclmean,v_voclmean,      &
+            wspd_uoclmean,u_uoclstd,v_voclstd,wspd_uoclstd)
 
 !          IF (MOD(NINT(XTIME),clwrfH) == 0) THEN
 !          IF (MOD(NINT(XTIME+dt/60.),clwrfH) == 0) THEN
@@ -254,6 +329,24 @@ CONTAINS
                skintempclmean=skintempclmean+t273
                skintempclmin=skintempclmin+t273
                skintempclmax=skintempclmax+t273
+               utauclmean=utauclmean/nsteps
+               utauclstd=SQRT(utauclstd/nsteps-utauclmean**2.)
+               vtauclmean=vtauclmean/nsteps
+               vtauclstd=SQRT(vtauclstd/nsteps-vtauclmean**2.)
+               taumclmean=taumclmean/nsteps
+               taumclstd=SQRT(taumclstd/nsteps-taumclmean**2.)
+               u_01clmean=u_01clmean/nsteps
+               u_01clstd=SQRT(u_01clstd/nsteps-u_01clmean**2.)
+               v_01clmean=v_01clmean/nsteps
+               v_01clstd=SQRT(v_01clstd/nsteps-v_01clmean**2.)
+               wspd_01clmean=wspd_01clmean/nsteps
+               wspd_01clstd=SQRT(wspd_01clstd/nsteps-wspd_01clmean**2.)
+               u_uoclmean=u_uoclmean/nsteps
+               u_uoclstd=SQRT(u_uoclstd/nsteps-u_uoclmean**2.)
+               v_voclmean=v_voclmean/nsteps
+               v_voclstd=SQRT(v_voclstd/nsteps-v_voclmean**2.)
+               wspd_uoclmean=wspd_uoclmean/nsteps
+               wspd_uoclstd=SQRT(wspd_uoclstd/nsteps-wspd_uoclmean**2.)
              IF  ( wrf_dm_on_monitor() ) THEN
                DO ij = 1 , num_tiles
                idp = i_start(ij)+(i_end(ij)-i_start(ij))/2
@@ -303,6 +396,42 @@ CONTAINS
                  ' TSKINTEMPclmax:',tskintempclmax(idp,jdp),          &
                  ' SKINTEMPclmean:',skintempclmean(idp,jdp),          &
                  ' SKINTEMPclstd:',skintempclstd(idp,jdp)
+               CALL wrf_debug(75, message)
+               WRITE(message, *)'CLWRFdiag - TAU ; tile: ',ij,        &
+                 ' UTAUclmax:', utauclmax(idp,jdp),                   &
+                 ' VTAUclmax:', vtauclmax(idp,jdp),                   &
+                 ' TAUMclmax:', taumclmax(idp,jdp),                   &
+                 ' TTAUMclmax:', ttaumclmax(idp,jdp),                 &
+                 ' UTAUclmean:', utauclmean(idp,jdp),                 &
+                 ' VTAUclmean:', vtauclmean(idp,jdp),                 &
+                 ' TAUMclmean:', taumclmean(idp,jdp),                 &
+                 ' UTAUclstd:', utauclstd(idp,jdp),                   &
+                 ' VTAUclstd:', vtauclstd(idp,jdp),                   &
+                 ' TAUMclstd:', taumclstd(idp,jdp)
+               CALL wrf_debug(75, message)
+               WRITE(message, *)'CLWRFdiag - WIND_01 ; tile: ',ij,    &
+                 ' U_01clmax:', u_01clmax(idp,jdp),                   &
+                 ' V_01clmax:', v_01clmax(idp,jdp),                   &
+                 ' WSPD_01clmax:', wspd_01clmax(idp,jdp),             &
+                 ' TWSPD_01clmax:', twspd_01clmax(idp,jdp),           &
+                 ' U_01clmean:', u_01clmean(idp,jdp),                 &
+                 ' V_01clmean:', v_01clmean(idp,jdp),                 &
+                 ' WSPD_01clmean:', wspd_01clmean(idp,jdp),           &
+                 ' U_01clstd:', u_01clstd(idp,jdp),                   &
+                 ' V_01clstd:', v_01clstd(idp,jdp),                   &
+                 ' WSPD_01clstd:', wspd_01clstd(idp,jdp)
+               CALL wrf_debug(75, message)
+               WRITE(message, *)'CLWRFdiag - WIND_UO ; tile: ',ij,    &
+                 ' U_UOclmax:', u_uoclmax(idp,jdp),                     &
+                 ' V_VOclmax:', v_voclmax(idp,jdp),                     &
+                 ' WSPD_UOclmax:', wspd_uoclmax(idp,jdp),             &
+                 ' TWSPD_UOclmax:', twspd_uoclmax(idp,jdp),           &
+                 ' U_UOclmean:', u_uoclmean(idp,jdp),                   &
+                 ' V_VOclmean:', v_voclmean(idp,jdp),                   &
+                 ' WSPD_UOclmean:', wspd_uoclmean(idp,jdp),           &
+                 ' U_UOclstd:', u_uoclstd(idp,jdp),                     &
+                 ' V_VOclstd:', v_voclstd(idp,jdp),                     &
+                 ' WSPD_UOclstd:', wspd_uoclstd(idp,jdp)
                CALL wrf_debug(75, message)
                ENDDO
              ENDIF

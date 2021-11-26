@@ -26,6 +26,7 @@ SUBROUTINE wrf_$1_$2_$6_$3$4_$5 ( DataHandle,Element, ifelse($6,td,`DateStr,') i
 !</PRE>
 !</DESCRIPTION>
 USE module_state_description
+ifelse($1$2$6,putdomti,`USE module_xios, ONLY : xios_on, xios_def_gblatt')
 IMPLICIT NONE
 INTEGER ,       INTENT(IN)  :: DataHandle
 CHARACTER*(*) , INTENT(IN)  :: Element
@@ -52,6 +53,10 @@ CALL wrf_debug( DEBUG_LVL, "module_io.F (md_calls.m4) : in wrf_$1_$2_$6_$3$4_$5 
 ifelse($3,integer,`locCount = Count')
 ifelse($3,real,`locCount = Count')
 ifelse($3,logical,`locCount = Count')
+
+ifelse($1$2$3$4$5$6,putdomrealscati,`call xios_def_gblatt(Element,Data)')
+ifelse($1$2$3$4$5$6,putdomintegerscati,`call xios_def_gblatt(Element,Data)')
+ifelse($1$2$3$4$5$6,putdomchararrti,`call xios_def_gblatt(Element,Data)')
 
 Status = 0
 CALL get_handle ( Hndl, io_form , for_out, DataHandle )

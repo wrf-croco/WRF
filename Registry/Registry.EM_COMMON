@@ -812,6 +812,8 @@ state    real   DTW              ij     misc        1         -     r   "DTW"   
 # Ocean surface currents
 state    real   UOCE            ij     misc        1         -     i0124rd=(interp_mask_water_field:lu_index,iswater)  "UOCE"  "SEA SURFACE ZONAL CURRENTS" "m s-1"
 state    real   VOCE            ij     misc        1         -     i0124rd=(interp_mask_water_field:lu_index,iswater)  "VOCE"  "SEA SURFACE MERIDIONAL CURRENTS" "m s-1"
+# Charnock coefficient from wave model
+state    real   CHA_COEF        ij     misc        1         -     i0124rd=(interp_mask_water_field:lu_index,iswater)  "CHA_COEF"  "CHARNOCK COEFFICIENT" ""
 
 # DFI variables
 state   real   hcoeff         {ndfi} misc        1         -     -    "HCOEFF"               "initialization weights"
@@ -1092,7 +1094,7 @@ state    real    dl_u_bep      ikj     misc        1         Z      -        "dl
 state    real    sf_bep        ikj     misc        1         Z      -        "sf_bep"                "surface grid"              "-"
 state    real    vl_bep        ikj     misc        1         Z      -        "vl_bep"                "volume grid"               "-"
 state    real   tke_pbl        ikj     misc        1         Z      rh       "tke_pbl"              "TKE from PBL"      "m2 s-2"
-state    real   el_pbl         ikj     misc        1         Z      rh       "el_pbl"               "Length scale from PBL"      "m"
+state    real   el_pbl         ikj     misc        1         Z      h        "el_pbl"               "Length scale from PBL"      "m"
 # Diagnostic BOULAC PBL variables
 state    real   wu_tur         ikj     misc        1         -      r        "wu_tur"               "Turbulent flux of momentum(x)"      "m2 s-2"
 state    real   wv_tur         ikj     misc        1         -      r        "wv_tur"               "Turbulent flux of momentum(y)"      "m2 s-2"
@@ -1555,7 +1557,7 @@ state    real  CLDFRA          ikj      misc        1         -      rh       "C
 state    real  CONVCLD          ij      misc        1         -      r        "CONVCLD"               "BMJ CONVECTIVE CLOUD" "kg m-2"
 state    real  CCLDFRA         ikj      misc        1         -      r        "CCLDFRA"               "CONVECTIVE CLOUD FRACTION" ""
 state    real  CLDFRA_OLD      ikj      misc        1         -      r        "CLDFRA_OLD"            "previous time level cldfra"                           ""
-state    real  CLDFRA_BL       ikj      misc        1         -      r        "CLDFRA_BL"             "CLOUD FRACTION pbl"                                   ""
+state    real  CLDFRA_BL       ikj      misc        1         -      -        "CLDFRA_BL"             "CLOUD FRACTION pbl"                                   ""
 state    real  CLDT             ij      misc        1         -      -        "CFRACT"                "TOTAL CLOUD FRACTION"                                 ""
 #state    real  CLDL             ij      misc        1         -      -        "CFRACL"                "LOW CLOUD FRACTION (ETA GREATER THAN 0.69)"           ""
 #state    real  LWP              ij      misc        1         -      -        "LWP"                   "LIQUID CLOUD WATER PATH"                              "kg m-2"
@@ -1631,6 +1633,45 @@ state    real  RAINNCVMEAN      ij      misc        1         -      rh3      "R
 state    real  RAINCVSTD        ij      misc        1         -      rh3      "RAINCVSTD"              "STANDARD DEV. CUMULUS PRECIPITATION FLUX IN DIAGNOSTIC OUTPUT INTERVAL"             "kg m-2 s-1"
 state    real  RAINNCVSTD       ij      misc        1         -      rh3      "RAINNCVSTD"             "STANDARD DEV. GRID SCALE PRECIPITATION IN FLUX DIAGNOSTIC OUTPUT INTERVAL"          "kg m-2 s-1"
 state    integer  nsteps         -      misc        -         -       r       "NSTEPS"                 "Time Step Counter"           ""
+state    real  UTAU             ij      misc        1         -      rh       "UTAU"                   "ZONAL WIND STRESS"           "N m-2"
+state    real  VTAU             ij      misc        1         -      rh       "VTAU"                   "MERIDIONAL WIND STRESS"      "N m-2"
+state    real  TAUM             ij      misc        1         -      rh       "TAUM"                   "WIND STRESS MODULE"          "N m-2"
+state    real  UTAUMEAN         ij      misc        1         -      rh3      "UTAUMEAN"               "MEAN ZONAL WIND STRESS IN DIAGNOSTIC OUTPUT INTERVAL"                               "N m-2"
+state    real  VTAUMEAN         ij      misc        1         -      rh3      "VTAUMEAN"               "MEAN MERIDIONAL WIND STRESS IN DIAGNOSTIC OUTPUT INTERVAL"                          "N m-2"
+state    real  TAUMMEAN         ij      misc        1         -      rh3      "TAUMMEAN"               "MEAN WIND STRESS MODULE IN DIAGNOSTIC OUTPUT INTERVAL"                              "N m-2"
+state    real  TTAUMMAX         ij      misc        1         -      rh3      "TTAUMMAX"               "TIME OF MAXIMUM WIND STRESS IN DIAGNOSTIC OUTPUT INTERVAL"                          "minute"
+state    real  UTAUMAX          ij      misc        1         -      rh3      "UTAUMAX"                "MAXIMUM ZONAL WIND STRESS IN DIAGNOSTIC OUTPUT INTERVAL"                            "N m-2"
+state    real  VTAUMAX          ij      misc        1         -      rh3      "VTAUMAX"                "MAXIMUM MERIDIONAL WIND STRESS IN DIAGNOSTIC OUTPUT INTERVAL"                       "N m-2"
+state    real  TAUMMAX          ij      misc        1         -      rh3      "TAUMMAX"                "MAXIMUM WIND STRESS MODULE IN DIAGNOSTIC OUTPUT INTERVAL"                           "N m-2"
+state    real  UTAUSTD          ij      misc        1         -      rh3      "UTAUSTD"                "STANDARD DEV. OF ZONAL WIND STRESS IN DIAGNOSTIC OUTPUT INTERVAL"                   "N m-2"
+state    real  VTAUSTD          ij      misc        1         -      rh3      "VTAUSTD"                "STANDARD DEV. OF MERIDIONAL WIND STRESS IN DIAGNOSTIC OUTPUT INTERVAL"              "N m-2"
+state    real  TAUMSTD          ij      misc        1         -      rh3      "TAUMSTD"                "STANDARD DEV. OF WIND STRESS MODULE IN DIAGNOSTIC OUTPUT INTERVAL"                  "N m-2"
+state    real  U_01             ij      misc        1         -      rh       "U_01"                   "ZONAL WIND at 1st level"        "m/s"
+state    real  V_01             ij      misc        1         -      rh       "V_01"                   "MERIDIONAL WIND at 1st level"   "m/s"
+state    real  WSPD_01          ij      misc        1         -      rh       "WSPD_01"                "WIND MODULE at 1st level"       "m/s"
+state    real  U_01MEAN         ij      misc        1         -      rh3      "U_01MEAN"               "MEAN ZONAL WIND at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"                         "m/s"
+state    real  V_01MEAN         ij      misc        1         -      rh3      "V_01MEAN"               "MEAN MERIDIONAL WIND at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"                    "m/s"
+state    real  WSPD_01MEAN      ij      misc        1         -      rh3      "WSPD_01MEAN"            "MEAN WIND MODULE at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"                        "m/s"
+state    real  TWSPD_01MAX      ij      misc        1         -      rh3      "TWSPD_01MAX"            "TIME OF MAXIMUM WIND SPEED at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"              "minute"
+state    real  U_01MAX          ij      misc        1         -      rh3      "U_01MAX"                "MAXIMUM ZONAL WIND at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"                      "m/s"
+state    real  V_01MAX          ij      misc        1         -      rh3      "V_01MAX"                "MAXIMUM MERIDIONAL WIND at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"                 "m/s"
+state    real  WSPD_01MAX       ij      misc        1         -      rh3      "WSPD_01MAX"             "MAXIMUM WIND MODULE at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"                     "m/s"
+state    real  U_01STD          ij      misc        1         -      rh3      "U_01STD"                "STANDARD DEV. OF ZONAL WIND at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"             "m/s"
+state    real  V_01STD          ij      misc        1         -      rh3      "V_01STD"                "STANDARD DEV. OF MERIDIONAL WIND at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"        "m/s"
+state    real  WSPD_01STD       ij      misc        1         -      rh3      "WSPD_01STD"             "STANDARD DEV. OF WIND MODULE at 1st level IN DIAGNOSTIC OUTPUT INTERVAL"            "m/s"
+state    real  U_UO             ij      misc        1         -      rh       "U_UO"                   "ZONAL RELATIVE WIND (relative to ocean)"       "m/s"
+state    real  V_VO             ij      misc        1         -      rh       "V_VO"                   "MERIDIONAL RELATIVE WIND (relative to ocean)"  "m/s"
+state    real  WSPD_UO          ij      misc        1         -      rh       "WSPD_UO"                "RELATIVE WIND MODULE (relative to ocean)"      "m/s"
+state    real  U_UOMEAN         ij      misc        1         -      rh3      "U_UOMEAN"               "MEAN ZONAL RELATIVE WIND (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL"         "m/s"
+state    real  V_VOMEAN         ij      misc        1         -      rh3      "V_VOMEAN"               "MEAN MERIDIONAL RELATIVE WIND (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL"    "m/s"
+state    real  WSPD_UOMEAN      ij      misc        1         -      rh3      "WSPD_UOMEAN"            "MEAN RELATIVE WIND MODULE (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL"        "m/s"
+state    real  TWSPD_UOMAX      ij      misc        1         -      rh3      "TWSPD_UOMAX"            "TIME OF MAXIMUM RELATIVE WIND SPEED (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL"        "minute"
+state    real  U_UOMAX          ij      misc        1         -      rh3      "U_UOMAX"                "MAXIMUM ZONAL RELATIVE WIND (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL"      "m/s"
+state    real  V_VOMAX          ij      misc        1         -      rh3      "V_UOMAX"                "MAXIMUM MERIDIONAL RELATIVE WIND (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL" "m/s"
+state    real  WSPD_UOMAX       ij      misc        1         -      rh3      "WSPD_UOMAX"             "MAXIMUM RELATIVE WIND MODULE (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL"     "m/s"
+state    real  U_UOSTD          ij      misc        1         -      rh3      "U_UOSTD"                "STANDARD DEV. OF ZONAL RELATIVE WIND (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL"         "m/s"
+state    real  V_VOSTD          ij      misc        1         -      rh3      "V_VOSTD"                "STANDARD DEV. OF MERIDIONAL RELATIVE WIND (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL"    "m/s"
+state    real  WSPD_UOSTD       ij      misc        1         -      rh3      "WSPD_UOSTD"             "STANDARD DEV. OF RELATIVE WIND MODULE (relative to ocean) IN DIAGNOSTIC OUTPUT INTERVAL"        "m/s"
 
 # upward and downward clearsky and total diagnostic fluxes for CAM radiation
 state    real  ACSWUPT          ij      misc        1         -      rhdu     "ACSWUPT"               "ACCUMULATED UPWELLING SHORTWAVE FLUX AT TOP"          "J m-2"
@@ -1785,6 +1826,11 @@ i1       real  p_phy           ikj      misc        1         -
 state    real  t_phy           ikj      misc        1         -      r      "T_PHY"                        "Temperature"         "K"
 state    real  u_phy           ikj      misc        1         -      r      "U_PHY"                        "x-wind component at mass point"         "m s-1"
 state    real  v_phy           ikj      misc        1         -      r      "V_PHY"                        "y-wind component at mass point"         "m s-1"
+state    real  u_phyL1         ij       misc        1         -      -      "U_PHYL1"                      "x-wind component at mass point level 1" "m s-1"
+state    real  v_phyL1         ij       misc        1         -      -      "V_PHYL1"
+state    real  t_phyL1         ij       misc        1         -      -      "T_PHYL1"                      "Temperature level 1"                    "K"
+state    real  qvL1            ij       misc        1         -      -      "QVL1"                         "TWater vapor mixing ratio level 1"      "kg kg-1"
+state    real  rhoL1           ij       misc        1         -      -      "RHOL1"                        "DENSITY level 1"                        "Kg m-3"
 i1       real  dz8w            ikj      misc        1         Z
 i1       real  p8w             ikj      misc        1         Z
 i1       real  t8w             ikj      misc        1         Z
@@ -2245,6 +2291,61 @@ rconfig   real     nssl_cnos              namelist,physics      max_domains  3.e
 rconfig   real     nssl_rho_qh            namelist,physics      max_domains  500.     rh       "Graupel particle density"  ""      ""
 rconfig   real     nssl_rho_qhl           namelist,physics      max_domains  900.     rh       "Hail particle density"  ""      ""
 rconfig   real     nssl_rho_qs            namelist,physics      max_domains  100.     rh       "Snow particle density"  ""      ""
+
+
+
+# GLmod
+
+# buffer zones
+rconfig   logical   asiv_isbuffer    namelist,asiv    1               .false.    -    "to include the buffer zone" "" ""
+rconfig	  logical   asiv_isbuffer_flux namelist,asiv  1		      .false.	 -    "buffer in latent heat flux as well" "" ""
+
+state    real   buffer_u        ij     dyn_em      1         X      ihr        "u_buffer"        ""   ""          
+state    real   buffer_v        ij     dyn_em      1         Y      ihr        "v_buffer" "" ""
+state    real   buffer_w        ij     dyn_em      1         - ihr     "w_buffer"  "" ""
+state    real   buffer_t         ij     dyn_em      1         - ihr      "t_buffer" "" "" 
+
+rconfig   real      asiv_tau_buffer      namelist,asiv    1               36000.      irh   "timescale for buffer zone" "" ""
+rconfig   real      asiv_width_buffer      namelist,asiv    1               250.      irh   "width of buffer zone (in km)" "" ""
+
+rconfig   logical   asiv_drycase    namelist,asiv    1               .true.    -    "to set QV to zero each time radiative scheme is called" "" ""
+rconfig   logical   asiv_with_currents    namelist,asiv    1               .false.    -    "to set if currents are taken into account in surface schemes" "" ""
+
+# pour Coriolis
+rconfig   real      asiv_phieq      namelist,asiv    1               40.      irh   "equivalent latitude at yrelax" "" ""
+rconfig   real      asiv_lbeta      namelist,asiv    1               1500.    irh   "width of region where beta is not zero" "" ""
+
+# grille verticale du modele
+rconfig   integer   asiv_stretch_grid    namelist,asiv    1               0   -    "stretch_grid"  "0=linear, 1=tanh, 2=exp"  ""
+rconfig   real      asiv_z_scale         namelist,asiv    1               1.        -    "z_scale"  "The factor of the stretching, the smaller the more stretch"  "factor"
+
+# condition initiale
+rconfig   real      asiv_ybeta      namelist,asiv    1               1500.    irh   "y position for beta" "" ""
+rconfig   integer   asiv_create_sst  namelist,asiv   1               0    -         "SST initialization" "" ""
+
+# pour epaisseur optique
+rconfig   real      asiv_deltath_z  namelist,asiv    1               10       irh   "vertical profile for optical thickness" "" ""
+rconfig   real      asiv_tau0eq     namelist,asiv    1               6.       irh   "longwave optical depth limit at the south/equator" "" ""
+rconfig   real      asiv_tau0pole   namelist,asiv    1               1.5      irh   "longwave optical depth limit at the north/pole" "" ""
+rconfig   real      asiv_radflin    namelist,asiv    1               0.1      irh   "linear optical depth parameter" "" ""
+rconfig   logical   asiv_is_tau_front namelist,asiv  1               .false.   -    "set dependance for tau with latitude in tanh()" "" ""
+rconfig   logical   asiv_is_tau_invert namelist,asiv 1               .false.   -    "set dependance for tau with pressure coordinate " "" ""
+rconfig   real      asiv_ytau       namelist,asiv    1               3800     irh   "y location for optical depth front (in km)" "" ""
+rconfig   real      asiv_ltau       namelist,asiv    1               500      irh   "width in y for optical depth front (in km)" "" ""
+rconfig   logical   asiv_use_tsk_tau       namelist,asiv    1        .true.   irh   "true to define optical depth including sst anomalies" "" ""
+rconfig   logical   asiv_use_tsk_rad_bc   namelist,asiv    1         .true.   irh   "true to include sst anomalies in radiative BC at surface" "" ""
+
+# utilise dans condition initiale et dans optical depth
+rconfig   real      asiv_ssteq      namelist,asiv    1               298.     irh   "sst limit at the south/equator (in K)" "" ""
+rconfig   real      asiv_sstpole    namelist,asiv    1               275.     irh   "sst limit at the north/pole (in K)" "" ""
+rconfig   real      asiv_ysst       namelist,asiv    1               3800     irh   "y location for oceanic front (in km)" "" ""
+rconfig   real      asiv_lsst       namelist,asiv    1               500      irh   "width in y for oceanic front (in km)" "" ""
+
+
+# GLend
+
+
+
 
 
 # Lightning Qv Nudging 
@@ -3399,4 +3500,5 @@ xpose XPOSE_SPECTRAL_NUDGING dyn_em dif_analysis,dif_xxx,dif_yyy
 
 package   no_fft_used    fft_used==0                  -             -
 package   any_fft_used   fft_used==1                  -             state:t_xxx,u_xxx,ru_xxx,v_xxx,rv_xxx,w_xxx,ww_xxx,ph_xxx,dum_yyy,fourd_xxx
+
 

@@ -479,7 +479,11 @@ BENCH_START(surf_driver_tim)
           HYDRO_dt = -1
       endif
 
-      CALL surface_driver(                                                &
+!GLmod
+!      CALL surface_driver(                                                &
+!  ajout grid
+!GLend
+      CALL surface_driver(grid,                                           &
      &        HYDRO_dt=HYDRO_dt,  sfcheadrt=grid%sfcheadrt,               &
      &        INFXSRT=grid%INFXSRT,  soldrain=grid%soldrain,              &
      &         ACGRDFLX=grid%acgrdflx  ,ACHFX=grid%achfx        ,ACLHF=grid%aclhf        &
@@ -547,11 +551,12 @@ BENCH_START(surf_driver_tim)
      &        ,UDRUNOFF=grid%udrunoff  ,UST=grid%ust       ,UZ0=grid%uz0            &
      &        ,U_FRAME=grid%u_frame    ,U_PHY=grid%u_phy   ,V10=grid%v10            &
      &        ,U10E=grid%u10e          ,V10E=grid%v10e                              &
-     &        ,UOCE=grid%uoce          ,VOCE=grid%voce                              &
+     &        ,UOCE=grid%uoce          ,VOCE=grid%voce     ,CHA_COEF=grid%cha_coef  &
      &        ,VEGFRA=grid%vegfra      ,VZ0=grid%vz0       ,V_FRAME=grid%v_frame    &
      &        ,V_PHY=grid%v_phy        ,WARM_RAIN=grid%warm_rain                    &
      &        ,WSPD=grid%wspd          ,XICE=grid%xice     ,XLAND=grid%xland        &
      &        ,MAX_EDOM=grid%num_ext_model_couple_dom      ,CPLMASK=grid%cplmask    &
+     &        ,COSA=grid%cosa          ,SINA=grid%sina                              &
      &        ,Z0=grid%z0              ,Z=grid%z        ,ZNT=grid%znt               &
      &        ,ZS=grid%zs              ,ALBSI=grid%albsi , ICEDEPTH=grid%icedepth   &
      &        ,SNOWSI=grid%snowsi                                                   &
@@ -779,7 +784,7 @@ BENCH_START(surf_driver_tim)
      &        ,iopt_tbot=config_flags%opt_tbot, iopt_stc=config_flags%opt_stc & 
      &        ,iopt_gla=config_flags%opt_gla,   iopt_rsf=config_flags%opt_rsf & 
      &        ,iopt_soil=config_flags%opt_soil, iopt_pedo=config_flags%opt_pedo &
-     &        ,iopt_crop=config_flags%opt_crop                                       &
+     &        ,iopt_crop=config_flags%opt_crop
      &        , isnowxy=grid%isnowxy  ,    tvxy=grid%tvxy    ,    tgxy=grid%tgxy     &
      &        ,canicexy=grid%canicexy ,canliqxy=grid%canliqxy,   eahxy=grid%eahxy    &
      &        ,   tahxy=grid%tahxy    ,    cmxy=grid%cmxy    ,    chxy=grid%chxy     &
@@ -908,6 +913,12 @@ BENCH_START(surf_driver_tim)
      &     grid%i_start(1),min(grid%i_end(1), ide-1),      &
      &     grid%j_start(1),min(grid%j_end(1), jde-1) )
 #endif
+
+   grid%u_phyL1(ips:ipe,jps:jpe) = grid%u_phy(ips:ipe,kps,jps:jpe)
+   grid%v_phyL1(ips:ipe,jps:jpe) = grid%v_phy(ips:ipe,kps,jps:jpe)
+   grid%t_phyL1(ips:ipe,jps:jpe) = grid%t_phy(ips:ipe,kps,jps:jpe)
+   grid%qvL1(ips:ipe,jps:jpe) = moist(ips:ipe,kps,jps:jpe,P_QV)
+   grid%rhoL1(ips:ipe,jps:jpe) = grid%rho(ips:ipe,kps,jps:jpe)
 
 BENCH_END(surf_driver_tim)
 

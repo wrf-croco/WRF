@@ -14,6 +14,8 @@ state   real   lakemask            ij    misc          1     -     i012rhd=(inte
 #state    real   SST              ij    misc        1         -     i01245rh05d=(interp_mask_field:lu_index,iswater)f=(p2c)   "SST"              "SEA SURFACE TEMPERATURE" "K"
 state    real   SST              ij     misc        1         -     i01245rh0d=(interp_mask_field:lu_index,iswater)   "SST"              "SEA SURFACE TEMPERATURE" "K"
 state    real   SST_INPUT        ij     misc        1         -     rh   "SST_INPUT"              "SEA SURFACE TEMPERATURE FROM WRFLOWINPUT FILE" "K"
+state    real   MYDROP           ij     misc        1        -      i4h9r     "MYDROP" "Droplet Concentration number" "area/area"
+
 
 
 # Registry entries that are exclusive to Registry.EM

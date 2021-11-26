@@ -984,11 +984,13 @@ Namelist variables for controlling the adaptive time step option:
                                                   model layers is specified in OM_DEPTH in wrfinput_d01
  traj_opt                            = 0        ! Forward trajectory calculation (Lee and Chen 2013)
  num_traj                            = 1000     ! number of trajectories to be released
- isftcflx                            = 0        ! alternative Ck, Cd formulation for tropical storm application 
+ isftcflx                            = 0        ! alternative Ck, Cd formulation for tropical storm application or for wave coupling 
                                                   sf_sfclay=1 and 11
                                                   0=default
                                                   1=Donelan Cd + const z0q 
-                                                  2=Donelan Cd + Garratt 
+                                                  2=Donelan Cd + Garratt
+                                                  5=varying charnock coefficient from a wave model (atmosphere-wave coupling only)
+                                                  6=classical charnock coefficient+saturation 
                                                   sf_sfclay=5
                                                   (default) =0: z0, zt, and zq from COARE3.0 (Fairall et al 2003)
                                                             =1: z0 from Davis et al (2008), zt & zq from COARE3.0

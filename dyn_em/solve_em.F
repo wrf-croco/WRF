@@ -78,6 +78,7 @@ SUBROUTINE solve_em ( grid , config_flags  &
    USE module_llxy, ONLY : proj_cassini
    USE module_avgflx_em, ONLY : zero_avgflx, upd_avgflx
    USE module_cpl, ONLY : coupler_on, cpl_settime, cpl_store_input
+   USE module_xios, ONLY : xios_on, xios_settime
 
    IMPLICIT NONE
 
@@ -275,6 +276,7 @@ SUBROUTINE solve_em ( grid , config_flags  &
    tmpTimeInterval2 = domain_get_current_time ( grid ) - domain_get_start_time ( grid )
    curr_secs  = real_time(tmpTimeInterval)
    curr_secs2 = real_time(tmpTimeInterval2)
+   IF (xios_on) CALL xios_settime( grid%id, NINT(curr_secs2 / grid%dt) + 1 )
 
    old_dt = grid%dt   ! store old time step for flux averaging code at end of RK loop
 !-----------------------------------------------------------------------------
@@ -801,7 +803,11 @@ BENCH_START(rk_tend_tim)
      DO ij = 1 , grid%num_tiles
 
        CALL wrf_debug ( 200 , ' call rk_tendency' )
-       CALL rk_tendency ( config_flags, rk_step                                                                &
+
+!GLmod
+!       CALL rk_tendency ( config_flags, rk_step                                                                &
+!GLend
+       CALL rk_tendency ( grid, config_flags, rk_step                                                  &
                          ,grid%ru_tend, grid%rv_tend, rw_tend, ph_tend, t_tend                                 &
                          ,ru_tendf, rv_tendf, rw_tendf, ph_tendf, t_tendf                                      &
                          ,mu_tend, grid%u_save, grid%v_save, w_save, ph_save                                   &
@@ -3597,8 +3603,11 @@ BENCH_START(micro_driver_tim)
 #      include "HALO_EM_SBM.inc"
 #endif
 
-
+#ifdef USE_MYDROP
+     CALL microphysics_driver(MYDROP=grid%MYDROP,                         &
+#else
      CALL microphysics_driver(                                            &
+#endif
       &         DT=dtm             ,DX=grid%dx              ,DY=grid%dy   &
       &        ,DZ8W=dz8w          ,F_ICE_PHY=grid%f_ice_phy              &
       &        ,ITIMESTEP=grid%itimestep             ,LOWLYR=grid%lowlyr  &

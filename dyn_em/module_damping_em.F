@@ -2,18 +2,25 @@
 !
 MODULE module_damping_em
 
+  USE module_domain             ! frame/module_domain.F
   USE module_wrf_error
 
 CONTAINS
 
 !------------------------------------------------------------------------------
 
-  SUBROUTINE held_suarez_damp( ru_tend, rv_tend, ru, rv, p, pb,  &
+  SUBROUTINE held_suarez_damp( grid,ru_tend, rv_tend, &
+                                rw_tend, t_tend, &
+                                rw,t,&
+                                ru, rv, p, pb,  &
                                ids,ide, jds,jde, kds,kde, &
                                ims,ime, jms,jme, kms,kme, &
                                its,ite, jts,jte, kts,kte )
 
     IMPLICIT NONE
+
+   !  Input data.
+   TYPE (domain), INTENT(IN) :: grid
 
     INTEGER,      INTENT(IN   )    :: ids,ide, jds,jde, kds,kde
     INTEGER,      INTENT(IN   )    :: ims,ime, jms,jme, kms,kme
@@ -21,50 +28,56 @@ CONTAINS
 
     REAL, DIMENSION( ims:ime , kms:kme, jms:jme ),          &
           INTENT(INOUT) ::                         ru_tend, &
-                                                   rv_tend
+                                                   rv_tend, &
+                                                   rw_tend, t_tend
 
     REAL, DIMENSION( ims:ime , kms:kme, jms:jme ),          &
-          INTENT(IN) ::                            ru, rv, p, pb
+          INTENT(IN) ::                            ru, rv, p, pb, &
+                                                           rw,t
 
     integer :: i,j,k
+    real :: time_scale
 
-    REAL :: delty,delthez,sigb,kka,kkf
-    REAL :: sig,sigterm,kkt,kkv,daylensec
 
-    sigb=0.7
-    daylensec=60.0*60.0*24.0
-    kkf=1.0/daylensec
+!     Rayleigh time scale (in seconds)
 
-!  fixed limits so no divide by zero, WCS 070509
-
-    DO j=max(jds+1,jts),min(jde-1,jte)
-    DO k=kts,MIN(kte,kde-1)
-    DO i=its,ite
-
-       sig=    (p(i,k,j-1)+pb(i,k,j-1)+p(i,k,j)+pb(i,k,j))/     &
-               (p(i,1,j-1)+pb(i,1,j-1)+p(i,1,j)+pb(i,1,j))
-       sigterm=max(0.0,(sig-sigb)/(1.0-sigb))
-       kkv=kkf*sigterm
-       rv_tend(i,k,j)=rv_tend(i,k,j)-kkv*rv(i,k,j)
- 
-    END DO
-    END DO
-    END DO
+    call nl_get_asiv_tau_buffer(1,time_scale)
 
     DO j=jts,min(jde-1,jte)
     DO k=kts,MIN(kte,kde-1)
     DO i=its,ite
-
-       sig=    (p(i-1,k,j)+pb(i-1,k,j)+p(i,k,j)+pb(i,k,j))/     &
-               (p(i-1,1,j)+pb(i-1,1,j)+p(i,1,j)+pb(i,1,j))
-       sigterm=max(0.0,(sig-sigb)/(1.0-sigb))
-       kkv=kkf*sigterm
-       ru_tend(i,k,j)=ru_tend(i,k,j)-kkv*ru(i,k,j)
- 
+         ru_tend(i,k,j)=ru_tend(i,k,j)-grid%buffer_u(i,j)*ru(i,k,j)/time_scale
     END DO
     END DO
     END DO
 
+   DO j = jts,jte
+   DO k=kts,MIN(kte,kde-1)
+   DO i = its,MIN(ite,ide-1)
+          rv_tend(i,k,j)=rv_tend(i,k,j)-grid%buffer_v(i,j)*rv(i,k,j)/time_scale
+   END DO
+   END DO
+   END DO
+
+   DO j = jts,MIN(jte,jde-1)
+   DO k = kts,kte-1   ! 2,kde   ou kts+1,min(kte,kde-1)  ou max(2,kts),min()
+   DO i = its,MIN(ite,ide-1)
+          rw_tend(i,k,j) = rw_tend(i,k,j) -grid%buffer_w(i,j)*rw(i,k,j)/time_scale
+    END DO
+    END DO
+    END DO
+
+
+   DO j = jts,MIN(jte,jde-1)
+   DO k = kts,MIN(kte,kde)
+   DO i = its,MIN(ite,ide-1)
+         t_tend(i,k,j)=t_tend(i,k,j)-grid%buffer_t(i,j)*t(i,k,j)/time_scale
+    END DO
+    END DO
+    END DO
+
+
+      RETURN
   END SUBROUTINE held_suarez_damp
 
 !------------------------------------------------------------------------------

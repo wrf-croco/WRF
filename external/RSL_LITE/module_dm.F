@@ -14,6 +14,7 @@ MODULE module_dm
 !   USE module_comm_dm
 #if ( DA_CORE != 1 )
    USE module_cpl, ONLY : coupler_on, cpl_init
+   USE module_xios, ONLY : xios_on, xios_initmodel
 #endif
 
    IMPLICIT NONE
@@ -1782,7 +1783,11 @@ LOGICAL FUNCTION wrf_dm_land_logical ( inval )
 #if ( DA_CORE != 1 )
         IF ( coupler_on ) THEN
            CALL cpl_init( mpi_comm_here )
-        ELSE
+        ENDIF
+        IF ( xios_on ) THEN
+           CALL xios_initmodel( mpi_comm_here, coupler_on )
+        ENDIF
+        IF ( .NOT. ( xios_on .OR. coupler_on ) ) THEN
 #endif
            CALL mpi_init ( ierr )
            mpi_comm_here = MPI_COMM_WORLD
@@ -2858,19 +2863,29 @@ END
 
 #if ( DA_CORE != 1 )
       USE module_cpl, ONLY : coupler_on, cpl_abort
+      USE module_xios, ONLY : xios_on, xios_finalizedomain, xios_finalizemodel
+      USE module_driver_constants, ONLY : max_domains
 #endif
 
       IMPLICIT NONE
 #ifndef STUBMPI
       INCLUDE 'mpif.h'
-      INTEGER ierr
+      INTEGER ierr, iidom
 #if ( DA_CORE != 1 )
-      IF ( coupler_on ) THEN
-         CALL cpl_abort( 'wrf_abort', 'look for abort message in rsl* files' )
-      ELSE
+      IF ( xios_on ) THEN
+         DO iidom = 1, max_domains
+            CALL xios_finalizedomain(iidom)
+         ENDDO
+         CALL xios_finalizemodel() 
+         IF ( coupler_on ) CALL cpl_abort( 'wrf_abort', 'look for abort message in rsl* files' )
+       ELSE
+         IF ( coupler_on ) THEN
+            CALL cpl_abort( 'wrf_abort', 'look for abort message in rsl* files' )
+         ELSE
 #endif
          CALL mpi_abort(MPI_COMM_WORLD,1,ierr)
 #if ( DA_CORE != 1 )
+         END IF
       END IF
 #endif
 #else

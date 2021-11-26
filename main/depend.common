@@ -15,6 +15,7 @@ module_dm.o: module_machine.o module_state_description.o module_wrf_error.o \
 		module_comm_nesting_dm.o \
 		module_configure.o module_comm_dm.o \
 		module_cpl.o \
+		module_xios.o \
 		../share/module_model_constants.o
 
 module_timing.o: hires_timer.o clog.o
@@ -80,6 +81,7 @@ module_integrate.o: \
 		module_configure.o \
 		$(LLIST) \
 		module_cpl.o \
+		module_xios.o \
                 module_dm.o \
 		$(ESMF_MOD_DEPENDENCE)
 
@@ -96,6 +98,7 @@ module_io.o :	md_calls.inc \
 		module_state_description.o \
 		module_configure.o  \
                 module_streams.o \
+                module_xios.o \
 		module_driver_constants.o 
 
 module_io_quilt.o: \
@@ -139,6 +142,11 @@ wrf_debug.o: \
 		module_wrf_error.o
 
 module_sm.o:	module_wrf_error.o
+
+module_xios.o: \
+		module_configure.o \
+		module_driver_constants.o \
+		module_domain.o
 
 module_cpl.o: \
 		../share/module_model_constants.o \
@@ -983,6 +991,7 @@ module_io_domain.o: module_io_wrf.o module_date_time.o ../frame/module_io.o  \
 output_wrf.o:   ../frame/module_io.o ../frame/module_wrf_error.o \
                 ../frame/module_domain.o ../frame/module_state_description.o \
                 ../frame/module_configure.o module_io_wrf.o  \
+                ../frame/module_xios.o \
 		$(ESMF_MOD_DEPENDENCE)
 
 wrf_fddaobs_in.o: \
@@ -1059,7 +1068,7 @@ mediation_feedback_domain.o: ../frame/module_domain.o ../frame/module_configure.
 mediation_force_domain.o: ../frame/module_domain.o ../frame/module_configure.o
 
 mediation_integrate.o: ../frame/module_domain.o ../frame/module_configure.o \
-			../frame/module_timing.o \
+			../frame/module_timing.o  ../frame/module_xios.o \
 			$(ESMF_MOD_DEPENDENCE) \
 			module_date_time.o module_bc_time_utilities.o \
 			module_compute_geop.o                         \
@@ -1310,6 +1319,7 @@ module_wrf_top.o: ../frame/module_machine.o \
                   ../frame/module_wrf_error.o \
                   ../frame/module_state_description.o \
                   ../frame/module_cpl.o \
+                  ../frame/module_xios.o \
                   $(ESMF_MOD_DEPENDENCE)
 
 # End of DEPENDENCIES for main
