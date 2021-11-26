@@ -83,6 +83,7 @@ CONTAINS
             sndname(jwrf,jext,4) = clprefix//'TAUX'                 ! send zonal wind tress at atmosphere-ocean interface
             sndname(jwrf,jext,5) = clprefix//'TAUY'                 ! send meridional wind tress at atmosphere-ocean interface
             sndname(jwrf,jext,6) = clprefix//'TAUMOD'               ! send the wind tress module at atmosphere-ocean interface
+            sndname(jwrf,jext,7) = clprefix//'PSFC'                 ! send the pressure at atmosphere-ocean interface
             
          END DO
       END DO
@@ -345,6 +346,12 @@ CONTAINS
             &                      - STBOLT * grid%EMISS(ips:ipe,jps:jpe) * grid%SST(ips:ipe,jps:jpe)**4 &
             &                      - grid%LH(ips:ipe,jps:jpe) - grid%HFX(ips:ipe,jps:jpe) 
          CALL cpl_sndfield( grid%id, lltosend, ifldid, cplsnd )
+      END IF
+
+      ifldid      = cpl_get_fldid( 'PSFC' )
+      lltosend(:) = cpl_tosend( grid%id, ifldid, max_edom )
+      IF ( COUNT(lltosend) > 0 ) THEN
+         CALL cpl_sndfield( grid%id, lltosend, ifldid, grid%psfc(ips:ipe,jps:jpe) )
       END IF
       
       ! test if we need to compute the module of the wind speed and stres
