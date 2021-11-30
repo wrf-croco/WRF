@@ -126,6 +126,10 @@ CONTAINS
             sndname(jwrf,jext,16) = clprefix//'WND_V_01'             ! send the meridional wind speed at atmosphere-ocean interface
             sndname(jwrf,jext,17) = clprefix//'WND_E_01'             ! send the eastward wind speed at atmosphere-ocean interface
             sndname(jwrf,jext,18) = clprefix//'WND_N_01'             ! send the northward wind speed at atmosphere-ocean interface
+
+            ! interface atmospheric pressure (Pa)
+            !--------------------------------------------------------------------------------------------------
+            sndname(jwrf,jext,19) = clprefix//'PSFC'                 ! send the pressure at atmosphere-ocean interface
             
          END DO
       END DO
@@ -409,10 +413,12 @@ CONTAINS
          CALL cpl_sndfield( grid%id, lltosend, ifldid, cplsnd )
       END IF
 
+      ! PSFC : surface pressure (Pa) : PSFC 
+      !--------------------------------------------------------------------------------------------------
       ifldid      = cpl_get_fldid( 'PSFC' )
       lltosend(:) = cpl_tosend( grid%id, ifldid, max_edom )
       IF ( COUNT(lltosend) > 0 ) THEN
-         CALL cpl_sndfield( grid%id, lltosend, ifldid, grid%psfc(ips:ipe,jps:jpe) )
+         CALL cpl_sndfield( grid%id, lltosend, ifldid, grid%PSFC(ips:ipe,jps:jpe) )
       END IF
       
       ! SURF_LATENT : surface latent heat flux (W.m-2, positive downward) : - LH
