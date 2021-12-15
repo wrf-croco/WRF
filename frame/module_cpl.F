@@ -75,15 +75,6 @@ CONTAINS
             ! Variables that can be received by WRF :
             !=========================================================================================================
             
-            ! Variables that can be sent by WRF
-            sndname(jwrf,jext,1) = clprefix//'EVAP-PRECIP'          ! send net fresh water budget: evaporation - total precipitation
-            sndname(jwrf,jext,2) = clprefix//'SURF_NET_SOLAR'       ! send net short wave flux at ground surface
-            sndname(jwrf,jext,3) = clprefix//'SURF_NET_NON-SOLAR'   ! send net non-solar heat flux at ground surface
-            sndname(jwrf,jext,4) = clprefix//'TAUX'                 ! send zonal wind tress at atmosphere-ocean interface
-            sndname(jwrf,jext,5) = clprefix//'TAUY'                 ! send meridional wind tress at atmosphere-ocean interface
-            sndname(jwrf,jext,6) = clprefix//'TAUMOD'               ! send the wind tress module at atmosphere-ocean interface
-            sndname(jwrf,jext,7) = clprefix//'PSFC'                 ! send the pressure at atmosphere-ocean interface
-
             ! surface driver: see subroutine cpl_rcv_sfcdrv (below) for details
             !--------------------------------------------------------------------------------------------------
             rcvname(jwrf,jext, 1) = clprefix//'SST'                  ! receive sea surface temperature (K)
@@ -127,7 +118,7 @@ CONTAINS
             sndname(jwrf,jext,17) = clprefix//'WND_E_01'             ! send the eastward wind speed at atmosphere-ocean interface
             sndname(jwrf,jext,18) = clprefix//'WND_N_01'             ! send the northward wind speed at atmosphere-ocean interface
 
-            ! interface atmospheric pressure (Pa)
+            ! Surface pressure (Pa)
             !--------------------------------------------------------------------------------------------------
             sndname(jwrf,jext,19) = clprefix//'PSFC'                 ! send the pressure at atmosphere-ocean interface
             
