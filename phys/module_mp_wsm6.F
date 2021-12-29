@@ -291,7 +291,12 @@ CONTAINS
   END SUBROUTINE wsm6
 !===================================================================
 !
-  SUBROUTINE wsm62D(t, q                                          &   
+#ifdef USE_MYDROP
+  SUBROUTINE wsm62D(MYDROP,qck11D,qc01D,                          &
+#else
+  SUBROUTINE wsm62D(                                              &   
+#endif
+                    t, q                                          &
                    ,qci, qrs, den, p, delz                        &
                    ,delt,g, cpd, cpv, rd, rv, t0c                 &
                    ,ep1, ep2, qmin                                &
