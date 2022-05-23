@@ -2190,6 +2190,7 @@ rconfig   real    qv_min_value            namelist,domains      1              1
 rconfig   integer ideal_init_method       namelist,domains	1              1       irh    "ideal_init_method" "inside start_em: 1=alb from phb, 2=alb from t_init" " "
 rconfig   real    dx                      namelist,domains     max_domains    200     h     "dx"        "X HORIZONTAL RESOLUTION"   "METERS"
 rconfig   real    dy                      namelist,domains   	max_domains    200     h     "dy"        "Y HORIZONTAL RESOLUTION"   "METERS"
+rconfig   real    max_cpldom              namelist,domains      1      1       h    "max_cpldom"  ""
 rconfig   integer grid_id                 namelist,domains	max_domains    1       irh    "id"            ""      ""
 rconfig   logical grid_allowed            namelist,domains	max_domains    .true.  irh    "allowed"            ""      ""
 rconfig   integer parent_id               namelist,domains	max_domains    0       h     "parent_id"             ""      ""

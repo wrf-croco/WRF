@@ -234,7 +234,7 @@ CONTAINS
       ! ... End definition
       ! -----------------------------------------------------------------
       IF (llcompute_core) THEN 
-         IF ( pgrid%id == pgrid%max_dom ) CALL cpl_oasis_enddef()
+         IF ( pgrid%id == pgrid%max_cpldom ) CALL cpl_oasis_enddef()
          CALL wrf_message('cpl_oasis_define (compute_core) : cpl_oasis_enddef done')
       ELSE
          CALL cpl_oasis_enddef()

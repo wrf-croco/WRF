@@ -354,7 +354,7 @@ IF ( grid%active_this_task ) THEN
                IF ( grid%dfi_stage == DFI_STARTFWD ) THEN
                   CALL wrf_dfi_startfwd_init(new_nest)
                ENDIF
-               IF (coupler_on) CALL cpl_defdomain( new_nest )
+               IF (coupler_on .AND. new_nest%id <= new_nest%max_cpldom ) CALL cpl_defdomain( new_nest )
                IF (   xios_on) CALL xios_initdomain( new_nest, config_flags ) 
 ENDIF ! active_this_task
             END DO
@@ -463,7 +463,7 @@ ENDIF
                  CALL model_to_grid_config_rec ( grid_ptr%id , model_config_rec , config_flags )
                ENDIF
 #endif
-               IF (coupler_on) CALL cpl_snd( grid_ptr ) 
+               IF (coupler_on .AND. grid_ptr%id <= grid_ptr%max_cpldom ) CALL cpl_snd( grid_ptr ) 
                grid_ptr => grid_ptr%sibling
             END DO
             CALL set_current_grid_ptr( grid )
