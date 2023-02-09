@@ -118,7 +118,7 @@ CONTAINS
             sndname(jwrf,jext,17) = clprefix//'WND_E_01'             ! send the eastward wind speed at atmosphere-ocean interface
             sndname(jwrf,jext,18) = clprefix//'WND_N_01'             ! send the northward wind speed at atmosphere-ocean interface
 
-            ! Surface pressure (Pa)
+            ! interface atmospheric pressure (Pa)
             !--------------------------------------------------------------------------------------------------
             sndname(jwrf,jext,19) = clprefix//'PSFC'                 ! send the pressure at atmosphere-ocean interface
             
@@ -322,7 +322,7 @@ CONTAINS
       INTEGER                           :: i, j
       INTEGER                           :: max_edom
       REAL                              :: zu_uo, zv_vo, zspd, ztmp
-      REAL, DIMENSION(:,:), ALLOCATABLE :: cplsnd
+      REAL, DIMENSION(:,:), ALLOCATABLE :: cplsnd, TVRT, TVRSFC, TAUSFC, TVRSL, TAUSL, TAUAVG
       REAL, DIMENSION(:,:), ALLOCATABLE :: u_uo, v_vo, taut, taui, tauj
       LOGICAL,DIMENSION(:), ALLOCATABLE :: lltosend
       !!--------------------------------------------------------------------
@@ -334,7 +334,8 @@ CONTAINS
 
       max_edom = grid%num_ext_model_couple_dom
       ALLOCATE( cplsnd(ips:ipe,jps:jpe), lltosend(max_edom) )
-      
+      ALLOCATE( TVRT(ips:ipe,jps:jpe), TVRSFC(ips:ipe,jps:jpe), TAUSFC(ips:ipe,jps:jpe), TVRSL(ips:ipe,jps:jpe), TAUSL(ips:ipe,jps:jpe),TAUAVG(ips:ipe,jps:jpe) ) 
+
       ! we use ipe and not min(ipe, ide-1) as the variable we are using are coming from grid and are therefore initialized to 0
       !
       !=========================================================================================================
@@ -408,8 +409,12 @@ CONTAINS
       !--------------------------------------------------------------------------------------------------
       ifldid      = cpl_get_fldid( 'PSFC' )
       lltosend(:) = cpl_tosend( grid%id, ifldid, max_edom )
+
       IF ( COUNT(lltosend) > 0 ) THEN
-         CALL cpl_sndfield( grid%id, lltosend, ifldid, grid%PSFC(ips:ipe,jps:jpe) )
+
+         cplsnd(ips:ipe,jps:jpe) = grid%PSFC(ips:ipe,jps:jpe)*exp((9.81*grid%ht(ips:ipe,jps:jpe))/(287.0*grid%T2(ips:ipe,jps:jpe)*(1.0+0.61*grid%Q2(ips:ipe,jps:jpe))))
+!
+         CALL cpl_sndfield( grid%id, lltosend, ifldid, cplsnd )
       END IF
       
       ! SURF_LATENT : surface latent heat flux (W.m-2, positive downward) : - LH
